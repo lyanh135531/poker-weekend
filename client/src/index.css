@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  background-color: #0f172a;
+  color: white;
+}
+
+body {
+  margin: 0;
+  overflow: hidden; /* Prevent scrolling for the game table */
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Card highlight effects */
+.card-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-shine::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.1) 45%,
+    rgba(255,255,255,0.5) 50%,
+    rgba(255,255,255,0.1) 55%,
+    rgba(255,255,255,0) 100%
+  );
+  transform: rotate(45deg);
+  transition: all 0.3s;
+  opacity: 0;
+}
+
+.card-shine:hover::after {
+  opacity: 1;
+  animation: shine 1.5s infinite;
+}
+
+@keyframes shine {
+  0% { transform: translate(-100%, -100%) rotate(45deg); }
+  100% { transform: translate(100%, 100%) rotate(45deg); }
+}
