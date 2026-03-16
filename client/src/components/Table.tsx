@@ -11,77 +11,53 @@ interface TableProps {
 }
 
 const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
-  const me = gameState.players.find(p => p.id === myId);
-
   return (
-    <div className="relative w-full h-full flex items-center justify-center p-4">
-      {/* The Oval Table */}
-      {/* The Oval Table */}
-      <div className="w-[92%] h-[80%] bg-poker-felt rounded-[10rem] border-[16px] border-poker-green-dark shadow-[inset_0_0_80px_rgba(0,0,0,0.6),0_20px_50px_rgba(0,0,0,0.5)] relative flex items-center justify-center">
+    <div className="relative w-full h-full flex items-center justify-center p-8 bg-slate-950">
+      {/* The Table Outer Frame */}
+      <div className="w-[95%] h-[75%] max-w-6xl aspect-[16/9] bg-poker-felt rounded-[12rem] border-[16px] border-poker-green-dark shadow-[inset_0_0_100px_rgba(0,0,0,0.8),0_30px_60px_rgba(0,0,0,0.6)] relative flex items-center justify-center">
         
-        {/* Table Felt Texture/Pattern */}
-        <div className="absolute inset-0 opacity-20 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/felt.png')]"></div>
+        {/* Table Felt Texture */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/felt.png')] rounded-[11rem]"></div>
 
-        {/* Table Center Logo / UI */}
-        <div className="absolute top-[28%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none opacity-5 grayscale scale-110">
-            <h2 className="text-4xl font-black text-white tracking-widest uppercase italic">Poker Weekend</h2>
+        {/* Branding */}
+        <div className="absolute top-[22%] left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-5 grayscale scale-75 select-none text-center">
+            <h2 className="text-4xl font-black text-white tracking-[0.5em] uppercase italic">Poker Weekend</h2>
+            <div className="text-xs text-poker-gold/40 mt-1 font-bold tracking-[1em]">PREMIUM SERIES</div>
         </div>
 
-        {/* Pot Display */}
-        <div className="absolute top-[72%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center bg-black/60 backdrop-blur-md px-6 py-2 rounded-2xl border border-white/10 z-20 shadow-2xl">
-            <span className="text-poker-gold font-bold text-[10px] uppercase tracking-widest">Pot Total</span>
-            <span className="text-white text-3xl font-black tabular-nums drop-shadow-md">${gameState.pot}</span>
+        {/* Pot Display - Central Top */}
+        <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="absolute top-[35%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center bg-black/60 backdrop-blur-xl px-10 py-3 rounded-[2rem] border border-white/5 z-20 shadow-2xl"
+        >
+            <span className="text-poker-gold font-bold text-[10px] uppercase tracking-[0.4em] mb-1">Total Pot</span>
+            <span className="text-white text-4xl font-black tabular-nums tracking-tighter">${gameState.pot}</span>
+        </motion.div>
+
+        {/* Community Cards - Center */}
+        <div className="absolute top-[55%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+            <div className="flex gap-3 scale-110">
+                <AnimatePresence>
+                    {gameState.communityCards.map((card, idx) => (
+                        <Card key={`${card}-${idx}`} code={card} />
+                    ))}
+                </AnimatePresence>
+            </div>
         </div>
 
-        {/* Community Cards */}
-        <div className="absolute top-[52%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-2 z-10 scale-90 sm:scale-100">
-            <AnimatePresence>
-                {gameState.communityCards.map((card, idx) => (
-                    <Card key={`${card}-${idx}`} code={card} />
-                ))}
-            </AnimatePresence>
-        </div>
-
-        {/* Players grouped around the table */}
+        {/* Players distributed around the table */}
         {gameState.players.map((player, idx) => (
             <Player 
-                key={player.id} 
-                player={player} 
-                isMe={player.id === myId} 
+                key={player.id}
+                player={player}
+                isMe={player.id === myId}
                 isDealer={idx === gameState.dealerIndex}
-                position={idx} 
+                position={idx}
                 totalPlayers={gameState.players.length}
             />
         ))}
       </div>
-
-      {/* Action Controls (Only if it's my turn) */}
-      {me?.isTurn && (
-        <motion.div 
-            initial={{ y: 100 }} 
-            animate={{ y: 0 }} 
-            className="absolute bottom-8 left-0 right-0 flex justify-center gap-4 px-4"
-        >
-            <button 
-                onClick={() => onAction('fold')}
-                className="flex-1 max-w-[100px] bg-red-600/20 border-2 border-red-500 text-red-500 font-bold py-4 rounded-2xl backdrop-blur-md"
-            >
-                Fold
-            </button>
-            <button 
-                onClick={() => onAction('call')}
-                className="flex-1 max-w-[100px] bg-white/10 border-2 border-white/30 text-white font-bold py-4 rounded-2xl backdrop-blur-md"
-            >
-                {gameState.players.some(p => p.bet > me.bet) ? 'Call' : 'Check'}
-            </button>
-            <button 
-                onClick={() => onAction('raise', 50)}
-                className="flex-1 max-w-[100px] bg-poker-gold text-poker-green-dark font-black py-4 rounded-2xl shadow-lg"
-            >
-                Raise
-            </button>
-        </motion.div>
-      )}
     </div>
   );
 };
