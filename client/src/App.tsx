@@ -10,6 +10,7 @@ function App() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [name, setName] = useState('');
+  const [roomId, setRoomId] = useState('weekend-poker');
   const [joined, setJoined] = useState(false);
 
   useEffect(() => {
@@ -37,18 +38,23 @@ function App() {
   }, []);
 
   const joinGame = () => {
-    if (!name) return;
-    console.log('App: Joining game as', name);
-    socket?.emit('join_room', { roomId: 'weekend-poker', name });
+    if (!name || !roomId) return;
+    console.log('App: Joining game', roomId, 'as', name);
+    socket?.emit('join_room', { roomId, name });
     setJoined(true);
   };
 
+  const createRoom = () => {
+    const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+    setRoomId(newRoomId);
+  };
+
   const startGame = () => {
-    socket?.emit('start_game', { roomId: 'weekend-poker' });
+    socket?.emit('start_game', { roomId });
   };
 
   const handleAction = (type: string, amount: number = 0) => {
-    socket?.emit('action', { roomId: 'weekend-poker', type, amount });
+    socket?.emit('action', { roomId, type, amount });
   };
 
   return (
@@ -78,8 +84,25 @@ function App() {
                   placeholder="Enter your name" 
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="bg-white/5 border-2 border-white/10 rounded-2xl px-6 py-5 text-white placeholder:text-white/20 w-full outline-none focus:border-poker-gold focus:bg-white/10 transition-all text-xl font-bold text-center"
+                  className="bg-white/5 border-2 border-white/10 rounded-2xl px-6 py-4 text-white placeholder:text-white/20 w-full outline-none focus:border-poker-gold focus:bg-white/10 transition-all text-xl font-bold text-center"
                 />
+                
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    placeholder="Room ID" 
+                    value={roomId}
+                    onChange={(e) => setRoomId(e.target.value)}
+                    className="flex-1 bg-white/5 border-2 border-white/10 rounded-2xl px-4 py-4 text-white placeholder:text-white/20 outline-none focus:border-poker-gold focus:bg-white/10 transition-all text-lg font-bold text-center uppercase"
+                  />
+                  <button 
+                    onClick={createRoom}
+                    className="bg-white/10 border-2 border-white/20 text-white font-bold px-4 py-4 rounded-2xl hover:bg-white/20 transition-all text-sm uppercase"
+                  >
+                    New
+                  </button>
+                </div>
+
                 <button 
                   onClick={joinGame}
                   className="w-full bg-poker-gold text-poker-green-dark font-black px-12 py-5 rounded-2xl shadow-[0_8px_0_0_#b8860b] active:shadow-none active:translate-y-2 transition-all text-2xl uppercase tracking-widest hover:brightness-110"
@@ -110,7 +133,7 @@ function App() {
                 {gameState.stage === 'WAITING' && (
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col items-center gap-4">
                     <div className="bg-black/60 backdrop-blur-xl px-6 py-3 rounded-full border border-white/10 text-white font-bold text-sm">
-                        Waiting for players... ({gameState.players.length}/6)
+                        Waiting for players... ({gameState.players.length}/10)
                     </div>
                     {gameState.players.length >= 2 && (
                         <button 

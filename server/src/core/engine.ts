@@ -20,7 +20,7 @@ export class PokerEngine {
   }
 
   addPlayer(id: string, name: string) {
-    if (this.state.players.length >= 6) return false;
+    if (this.state.players.length >= 10) return false;
     this.state.players.push({
       id,
       name,
