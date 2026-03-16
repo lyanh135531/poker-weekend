@@ -131,18 +131,39 @@ function App() {
                 />
                 
                 {gameState.stage === 'WAITING' && (
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col items-center gap-4">
-                    <div className="bg-black/60 backdrop-blur-xl px-6 py-3 rounded-full border border-white/10 text-white font-bold text-sm">
-                        Waiting for players... ({gameState.players.length}/10)
-                    </div>
-                    {gameState.players.length >= 2 && (
-                        <button 
-                            onClick={startGame}
-                            className="bg-white text-poker-green-dark font-black px-12 py-4 rounded-2xl shadow-2xl text-xl uppercase tracking-widest hover:scale-105 active:scale-95 transition-all"
-                        >
-                            Start Game
-                        </button>
-                    )}
+                  <div className="absolute inset-0 z-50 flex flex-col items-center justify-center pointer-events-none">
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex flex-col items-center gap-6 pointer-events-auto"
+                    >
+                      <div className="bg-slate-900/80 backdrop-blur-2xl px-8 py-4 rounded-[2rem] border-2 border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col items-center">
+                          <div className="flex gap-2 mb-2">
+                            {[...Array(3)].map((_, i) => (
+                              <motion.div 
+                                key={i}
+                                animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
+                                transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+                                className="w-2 h-2 bg-poker-gold rounded-full"
+                              />
+                            ))}
+                          </div>
+                          <span className="text-poker-gold font-black uppercase tracking-[0.2em] text-xs mb-1">Waiting Room</span>
+                          <span className="text-white font-medium text-sm">
+                              {gameState.players.length} / 10 Players Joined
+                          </span>
+                      </div>
+                      
+                      {gameState.players.length >= 2 && (
+                          <button 
+                              onClick={startGame}
+                              className="group relative bg-white text-poker-green-dark font-black px-16 py-5 rounded-2xl shadow-2xl text-2xl uppercase tracking-widest hover:scale-105 active:scale-95 transition-all overflow-hidden"
+                          >
+                              <div className="absolute inset-0 bg-poker-gold opacity-0 group-hover:opacity-10 transition-opacity"></div>
+                              Start Game
+                          </button>
+                      )}
+                    </motion.div>
                   </div>
                 )}
               </motion.div>

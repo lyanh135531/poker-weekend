@@ -15,8 +15,8 @@ interface PlayerProps {
 const Player: React.FC<PlayerProps> = ({ player, isMe, isDealer, position, totalPlayers }) => {
   // Simple circular positioning logic
   const angle = (position / totalPlayers) * 2 * Math.PI + Math.PI / 2;
-  const x = Math.cos(angle) * 45; // percentage
-  const y = Math.sin(angle) * 35; // percentage
+  const x = Math.cos(angle) * 44; 
+  const y = Math.sin(angle) * 42; // Max out to the edges
 
   return (
     <motion.div 
@@ -31,13 +31,13 @@ const Player: React.FC<PlayerProps> = ({ player, isMe, isDealer, position, total
     >
         {/* Player Cards (Hole Cards) */}
         {player.cards.length > 0 && !player.isFolded && (
-            <div className={`flex -space-x-4 mb-2 ${isMe ? 'scale-110' : 'scale-75'}`}>
+            <div className={`flex -space-x-4 ${isMe ? 'scale-100' : 'scale-75'}`}>
                 <AnimatePresence>
                     {player.cards.map((card, idx) => (
                         <Card 
                             key={`${player.id}-card-${idx}`} 
                             code={card} 
-                            hidden={!isMe} // Only show my own cards
+                            hidden={!isMe} 
                         />
                     ))}
                 </AnimatePresence>
@@ -45,8 +45,8 @@ const Player: React.FC<PlayerProps> = ({ player, isMe, isDealer, position, total
         )}
 
         {/* Avatar Circle */}
-        <div className={`relative w-14 h-14 md:w-16 md:h-16 rounded-full border-4 flex items-center justify-center bg-slate-800 shadow-xl transition-all ${player.isTurn ? 'border-poker-gold scale-110 shadow-[0_0_20px_rgba(212,175,55,0.4)]' : 'border-slate-700'}`}>
-            <User className={`w-8 h-8 ${player.isTurn ? 'text-poker-gold' : 'text-slate-500'}`} />
+        <div className={`relative w-12 h-12 md:w-16 md:h-16 rounded-full border-4 flex items-center justify-center bg-slate-800 shadow-xl transition-all ${player.isTurn ? 'border-poker-gold scale-110' : 'border-slate-700'}`}>
+            <User className={`w-6 h-6 md:w-8 md:h-8 ${player.isTurn ? 'text-poker-gold' : 'text-slate-500'}`} />
             
             {/* Dealer Marker */}
             {isDealer && (
@@ -64,7 +64,7 @@ const Player: React.FC<PlayerProps> = ({ player, isMe, isDealer, position, total
         </div>
 
         {/* Name & Chips Bundle */}
-        <div className="mt-4 bg-slate-900/90 backdrop-blur-md border border-white/10 px-4 py-1.5 rounded-2xl text-center shadow-2xl min-w-[100px]">
+        <div className="mt-1 bg-slate-900/90 backdrop-blur-md border border-white/10 px-3 py-1 rounded-xl text-center shadow-2xl min-w-[80px]">
             <div className={`text-[10px] font-black uppercase tracking-tighter ${isMe ? 'text-poker-gold' : 'text-white/60'}`}>
                 {player.name} {isMe && '(YOU)'}
             </div>

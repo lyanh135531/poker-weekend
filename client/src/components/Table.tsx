@@ -16,24 +16,25 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
   return (
     <div className="relative w-full h-full flex items-center justify-center p-4">
       {/* The Oval Table */}
-      <div className="w-[92%] h-[80%] bg-poker-felt rounded-[10rem] border-[16px] border-poker-green-dark shadow-[inset_0_0_80px_rgba(0,0,0,0.6),0_20px_50px_rgba(0,0,0,0.5)] relative flex items-center justify-center overflow-hidden">
+      {/* The Oval Table */}
+      <div className="w-[92%] h-[80%] bg-poker-felt rounded-[10rem] border-[16px] border-poker-green-dark shadow-[inset_0_0_80px_rgba(0,0,0,0.6),0_20px_50px_rgba(0,0,0,0.5)] relative flex items-center justify-center">
         
         {/* Table Felt Texture/Pattern */}
         <div className="absolute inset-0 opacity-20 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/felt.png')]"></div>
 
         {/* Table Center Logo / UI */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none opacity-20 grayscale scale-150">
-            <h2 className="text-4xl font-black text-white tracking-widest">POKERWKD</h2>
+        <div className="absolute top-[28%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none opacity-5 grayscale scale-110">
+            <h2 className="text-4xl font-black text-white tracking-widest uppercase italic">Poker Weekend</h2>
         </div>
 
         {/* Pot Display */}
-        <div className="absolute top-[35%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center bg-black/20 backdrop-blur-sm px-4 py-2 rounded-2xl border border-white/5">
-            <span className="text-poker-gold font-bold text-[10px] uppercase tracking-widest">Main Pot</span>
-            <span className="text-white text-4xl font-black tabular-nums drop-shadow-md">${gameState.pot}</span>
+        <div className="absolute top-[72%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center bg-black/60 backdrop-blur-md px-6 py-2 rounded-2xl border border-white/10 z-20 shadow-2xl">
+            <span className="text-poker-gold font-bold text-[10px] uppercase tracking-widest">Pot Total</span>
+            <span className="text-white text-3xl font-black tabular-nums drop-shadow-md">${gameState.pot}</span>
         </div>
 
         {/* Community Cards */}
-        <div className="flex gap-2 z-10">
+        <div className="absolute top-[52%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-2 z-10 scale-90 sm:scale-100">
             <AnimatePresence>
                 {gameState.communityCards.map((card, idx) => (
                     <Card key={`${card}-${idx}`} code={card} />
