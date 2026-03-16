@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { motion, AnimatePresence } from 'framer-motion';
 import { GameState } from './types/game';
 import Table from './components/Table';
 
@@ -12,20 +13,32 @@ function App() {
   const [joined, setJoined] = useState(false);
 
   useEffect(() => {
+    console.log('App: Initializing socket connection to', SERVER_URL);
     const newSocket = io(SERVER_URL);
     setSocket(newSocket);
 
+    newSocket.on('connect', () => {
+      console.log('App: Socket connected!', newSocket.id);
+    });
+
     newSocket.on('game_update', (state: GameState) => {
+      console.log('App: Game update received', state);
       setGameState(state);
     });
 
+    newSocket.on('connect_error', (err) => {
+      console.error('App: Socket connection error:', err);
+    });
+
     return () => {
+      console.log('App: Cleaning up socket');
       newSocket.close();
     };
   }, []);
 
   const joinGame = () => {
     if (!name) return;
+    console.log('App: Joining game as', name);
     socket?.emit('join_room', { roomId: 'weekend-poker', name });
     setJoined(true);
   };
