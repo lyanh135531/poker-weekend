@@ -20,6 +20,8 @@ export interface Player {
   isFolded: boolean;
   isTurn: boolean;
   bet: number;
+  hasActed: boolean;
+  isDealer: boolean;
 }
 
 export interface GameState {
@@ -30,4 +32,6 @@ export interface GameState {
   stage: GameStage;
   dealerIndex: number;
   currentTurnIndex: number;
+  minRaise: number;
+  lastRaiserIndex: number | null;
 }

@@ -82,7 +82,7 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
             idx={idx} 
             totalPlayers={gameState.players.length}
             isMe={player.id === myId}
-            isDealer={idx === gameState.dealerIndex}
+            isDealer={player.isDealer}
           />
         ))}
       </div>

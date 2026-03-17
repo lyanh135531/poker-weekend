@@ -145,26 +145,29 @@ function App() {
   }
 
   return (
-    <div className="layout-container h-screen bg-slate-950 select-none overflow-hidden">
-      {/* Upper Table Zone (Geometric Center) */}
-      <div className="flex-1 w-full relative flex items-center justify-center -mt-16">
-        <div className="absolute top-8 right-8 z-50">
-          <button 
-            onClick={handleLeave}
-            className="flex items-center gap-2 px-6 py-3 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all text-[10px] uppercase tracking-[0.3em] font-black"
-          >
-            Leave Table
-          </button>
+    <div className="layout-container h-screen bg-slate-950 select-none overflow-hidden relative">
+      {/* Absolute Centered Table */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="w-full h-full flex items-center justify-center pointer-events-auto">
+          <Table 
+            gameState={{ ...gameState, players: seatedPlayers }} 
+            myId={socket?.id} 
+            onAction={(type: string, amount?: number) => socket?.emit('action', { roomId: gameState.roomId, type, amount })} 
+          />
         </div>
-        <Table 
-          gameState={{ ...gameState, players: seatedPlayers }} 
-          myId={socket?.id} 
-          onAction={(type: string, amount?: number) => socket?.emit('action', { roomId: gameState.roomId, type, amount })} 
-        />
       </div>
 
-      {/* Lower Dashboard Zone (Safe Footer) */}
-      <div className="h-48 w-full flex items-center justify-center p-8 bg-gradient-to-t from-black/40 to-transparent">
+      {/* Floating UI Elements */}
+      <div className="absolute top-8 right-8 z-50">
+        <button 
+          onClick={handleLeave}
+          className="flex items-center gap-2 px-6 py-3 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all text-[10px] uppercase tracking-[0.3em] font-black"
+        >
+          Leave Table
+        </button>
+      </div>
+
+      <div className="absolute bottom-10 right-10 z-50">
         <ActionBar 
           player={me} 
           gameState={gameState} 
@@ -227,31 +230,44 @@ const ActionBar: React.FC<any> = ({ player, gameState, onAction }) => {
 
     return (
         <motion.div 
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="glass-ui-gold p-6 rounded-[2.5rem] flex items-center gap-6 w-full max-w-2xl shadow-[0_-20px_60px_rgba(0,0,0,0.5)]"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="glass-ui-gold p-4 rounded-3xl flex flex-col gap-4 w-72 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/5"
         >
-            <div className="flex-1 space-y-1 pl-4 border-l-2 border-white/5">
-               <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Pot Requirement</p>
-               <p className="text-xl font-black text-white">${callAmount}</p>
+            <div className="flex items-center justify-between px-2 pt-1">
+               <span className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-black">Call Amount</span>
+               <span className="text-lg font-black text-poker-gold">${callAmount}</span>
             </div>
 
-            <div className="flex-[3] flex items-center gap-4">
-              <button 
-                  onClick={() => onAction('fold')}
-                  className="flex-1 bg-red-500/5 border-2 border-red-500/20 text-red-500 font-bold py-5 rounded-2xl hover:bg-red-500 hover:text-white transition-all text-xs uppercase tracking-[0.2em]"
-              >
-                  Fold
-              </button>
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
+                <button 
+                    onClick={() => onAction('fold')}
+                    className="flex-1 bg-red-500/10 border border-red-500/20 text-red-500 font-black py-3 rounded-xl hover:bg-red-500 hover:text-white transition-all text-[10px] uppercase tracking-widest"
+                >
+                    Fold
+                </button>
+                <button 
+                    onClick={() => onAction('check')}
+                    className="flex-1 bg-white/5 border border-white/10 text-white font-black py-3 rounded-xl hover:bg-white/10 transition-all text-[10px] uppercase tracking-widest"
+                    disabled={callAmount > 0}
+                    style={{ opacity: callAmount > 0 ? 0.3 : 1 }}
+                >
+                    Check
+                </button>
+              </div>
+              
               <button 
                   onClick={() => onAction('call')}
-                  className="flex-[2] bg-white text-slate-950 font-black py-5 rounded-2xl hover:scale-105 active:scale-95 transition-all text-xs uppercase tracking-[0.4em] shadow-2xl"
+                  className="w-full bg-white text-slate-950 font-black py-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all text-[10px] uppercase tracking-[0.4em] shadow-xl"
+                  style={{ display: callAmount > 0 ? 'block' : 'none' }}
               >
-                  {callAmount > 0 ? `Call $${callAmount}` : 'Check'}
+                  Call ${callAmount}
               </button>
+
               <button 
                   onClick={() => onAction('raise', 50)}
-                  className="flex-1 btn-gold py-5 rounded-2xl text-xs uppercase tracking-[0.2em]"
+                  className="w-full btn-gold py-4 rounded-xl text-[10px] uppercase tracking-[0.3em] font-black"
               >
                   Raise
               </button>

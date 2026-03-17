@@ -15,7 +15,9 @@ export class PokerEngine {
       communityCards: [],
       stage: GameStage.WAITING,
       dealerIndex: 0,
-      currentTurnIndex: 0
+      currentTurnIndex: 0,
+      minRaise: 20,
+      lastRaiserIndex: null
     };
   }
 
@@ -28,7 +30,9 @@ export class PokerEngine {
       cards: [],
       isFolded: false,
       isTurn: false,
-      bet: 0
+      bet: 0,
+      hasActed: false,
+      isDealer: false
     });
     return true;
   }
@@ -78,23 +82,39 @@ export class PokerEngine {
     this.state.stage = GameStage.PRE_FLOP;
     this.state.communityCards = [];
     this.state.pot = 0;
+    this.state.minRaise = 20; // Default BB
+    this.state.lastRaiserIndex = null;
 
-    // Deal hole cards
-    for (const player of this.state.players) {
-      const cards = this.deck.draw(2);
-      player.cards = cards.map(c => `${c.rank}${c.suit}`);
-      player.isFolded = false;
-      player.bet = 0;
+    // Deal hole cards & reset player state
+    this.state.players.forEach(p => {
+      p.cards = this.deck.draw(2).map(c => `${c.rank}${c.suit}`);
+      p.isFolded = false;
+      p.bet = 0;
+      p.hasActed = false;
+    });
+
+    // Blinds logic
+    const n = this.state.players.length;
+    let sbIndex, bbIndex, utgIndex;
+
+    if (n === 2) {
+      // World Rules Heads-up: Dealer is SB, other is BB
+      sbIndex = this.state.dealerIndex;
+      bbIndex = (this.state.dealerIndex + 1) % n;
+      utgIndex = sbIndex; // SB (Dealer) acts first pre-flop
+    } else {
+      sbIndex = (this.state.dealerIndex + 1) % n;
+      bbIndex = (this.state.dealerIndex + 2) % n;
+      utgIndex = (this.state.dealerIndex + 3) % n;
     }
-
-    // Small Blind / Big Blind
-    const sbIndex = (this.state.dealerIndex + 1) % this.state.players.length;
-    const bbIndex = (this.state.dealerIndex + 2) % this.state.players.length;
     
     this.handleBet(this.state.players[sbIndex].id, 10);
     this.handleBet(this.state.players[bbIndex].id, 20);
 
-    this.state.currentTurnIndex = (this.state.dealerIndex + 3) % this.state.players.length;
+    // Pre-flop: the Big Blind is technically the last raiser (forced)
+    this.state.lastRaiserIndex = bbIndex;
+    this.state.currentTurnIndex = utgIndex;
+    
     this.updateTurns();
     return true;
   }
@@ -113,35 +133,57 @@ export class PokerEngine {
     const player = this.state.players[this.state.currentTurnIndex];
     if (player.id !== playerId) return false;
 
+    const currentMaxBet = Math.max(...this.state.players.map(p => p.bet));
+
     switch (type) {
       case 'fold':
         player.isFolded = true;
         break;
       case 'call':
-        const maxBet = Math.max(...this.state.players.map(p => p.bet));
-        const callAmount = maxBet - player.bet;
+        const callAmount = currentMaxBet - player.bet;
         this.handleBet(playerId, callAmount);
         break;
       case 'raise':
-        const currentMax = Math.max(...this.state.players.map(p => p.bet));
-        this.handleBet(playerId, (currentMax - player.bet) + amount);
+        // World rules: Raise must be at least minRaise
+        const totalRaiseTo = currentMaxBet + Math.max(amount, this.state.minRaise);
+        const addedChips = totalRaiseTo - player.bet;
+        if (this.handleBet(playerId, addedChips)) {
+            this.state.minRaise = Math.max(amount, this.state.minRaise);
+            this.state.lastRaiserIndex = this.state.currentTurnIndex;
+            // World Rule: Reset everyone else's hasActed on raise
+            this.state.players.forEach((p, i) => {
+                if (i !== this.state.currentTurnIndex && !p.isFolded) {
+                    p.hasActed = false;
+                }
+            });
+        } else {
+            return false; // Not enough chips
+        }
         break;
       case 'check':
-        // No action needed
+        if (player.bet < currentMaxBet) return false; // Cannot check if there's a bet to call
         break;
     }
 
+    player.hasActed = true;
     this.nextTurn();
     return true;
   }
 
   private nextTurn() {
-    // Check if round is over (everyone called highest bet or folded)
     const activePlayers = this.state.players.filter(p => !p.isFolded);
-    const maxBet = Math.max(...this.state.players.map(p => p.bet));
-    const everyoneCalled = activePlayers.every(p => p.bet === maxBet);
+    
+    // Check if hand is over early (everyone folded but one)
+    if (activePlayers.length === 1) {
+        this.resolveWinner();
+        return;
+    }
 
-    if (everyoneCalled) {
+    const currentMaxBet = Math.max(...this.state.players.map(p => p.bet));
+    const everyoneActed = activePlayers.every(p => p.hasActed);
+    const betsEqualized = activePlayers.every(p => p.bet === currentMaxBet);
+
+    if (everyoneActed && betsEqualized) {
         this.nextStage();
     } else {
         this.state.currentTurnIndex = (this.state.currentTurnIndex + 1) % this.state.players.length;
@@ -153,8 +195,13 @@ export class PokerEngine {
   }
 
   private nextStage() {
-    // Reset bets for next stage
-    this.state.players.forEach(p => p.bet = 0);
+    // Reset bets and acting flags for next stage
+    this.state.players.forEach(p => {
+        p.bet = 0;
+        p.hasActed = false;
+    });
+    this.state.minRaise = 20; // Reset minRaise to BB
+    this.state.lastRaiserIndex = null;
 
     switch (this.state.stage) {
       case GameStage.PRE_FLOP:
@@ -172,31 +219,46 @@ export class PokerEngine {
       case GameStage.RIVER:
         this.state.stage = GameStage.SHOWDOWN;
         this.resolveWinner();
-        break;
+        return; // resolveWinner handles stage transition if needed
     }
-    this.state.currentTurnIndex = (this.state.dealerIndex + 1) % this.state.players.length;
-    // Skip folded players
-    while (this.state.players[this.state.currentTurnIndex].isFolded) {
-        this.state.currentTurnIndex = (this.state.currentTurnIndex + 1) % this.state.players.length;
+
+    // Post-flop: Small Blind (first active player after dealer) starts
+    const n = this.state.players.length;
+    let nextIndex;
+    
+    if (n === 2) {
+        // Standard Heads-up Post-flop: Dealer acts LAST, BB acts FIRST.
+        // In our setup, Dealer is dealerIndex, BB is (dealerIndex + 1) % 2.
+        nextIndex = (this.state.dealerIndex + 1) % 2;
+    } else {
+        // Multi-player: Small Blind (Dealer + 1) acts first.
+        nextIndex = (this.state.dealerIndex + 1) % n;
     }
+
+    while (this.state.players[nextIndex].isFolded) {
+        nextIndex = (nextIndex + 1) % n;
+    }
+    this.state.currentTurnIndex = nextIndex;
   }
 
   private resolveWinner() {
     const activePlayers = this.state.players.filter(p => !p.isFolded);
     if (activePlayers.length === 0) return;
 
-    const evaluations = activePlayers.map(p => ({
-        player: p,
-        eval: HandEvaluator.evaluate([...p.cards, ...this.state.communityCards])
-    }));
+    if (activePlayers.length === 1) {
+        // Everyone else folded
+        activePlayers[0].chips += this.state.pot;
+    } else {
+        const evaluations = activePlayers.map(p => ({
+            player: p,
+            eval: HandEvaluator.evaluate([...p.cards, ...this.state.communityCards])
+        }));
 
-    evaluations.sort((a, b) => b.eval.score - a.eval.score);
-
-    const winner = evaluations[0].player;
-    winner.chips += this.state.pot;
+        evaluations.sort((a, b) => b.eval.score - a.eval.score);
+        const winner = evaluations[0].player;
+        winner.chips += this.state.pot;
+    }
     
-    // For a senior app, we'd emit a 'game_over' event with the winner info
-    // For now, we reset for the next hand
     this.state.pot = 0;
     this.state.stage = GameStage.WAITING;
     this.state.dealerIndex = (this.state.dealerIndex + 1) % this.state.players.length;
@@ -205,6 +267,7 @@ export class PokerEngine {
   private updateTurns() {
     this.state.players.forEach((p, i) => {
       p.isTurn = i === this.state.currentTurnIndex;
+      p.isDealer = i === this.state.dealerIndex;
     });
   }
 
