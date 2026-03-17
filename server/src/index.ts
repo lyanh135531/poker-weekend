@@ -50,34 +50,58 @@ async function startServer() {
   io.on('connection', (socket) => {
     console.log(`User connected: ${socket.id}`);
 
-    socket.on('join_room', async ({ roomId, name }) => {
-        socket.join(roomId);
-        if (!engines[roomId]) {
-            engines[roomId] = new PokerEngine(roomId);
-        }
-        
-        const engine = engines[roomId];
-        if (engine.addPlayer(socket.id, name)) {
-            await saveGameState(roomId, engine);
-            io.to(roomId).emit('game_update', engine.getState());
-        } else {
-            socket.emit('error', 'Room full or game already started');
-        }
-    });
-
-    socket.on('start_game', async ({ roomId }) => {
-        const engine = engines[roomId];
-        if (engine && engine.startGame()) {
-            await saveGameState(roomId, engine);
-            io.to(roomId).emit('game_update', engine.getState());
+    socket.on('join_room', async (data) => {
+        try {
+            const { roomId, name } = data;
+            console.log(`Join Room Request: ${roomId} from ${name}`);
+            socket.join(roomId);
+            if (!engines[roomId]) {
+                engines[roomId] = new PokerEngine(roomId);
+            }
+            
+            const engine = engines[roomId];
+            if (engine.addPlayer(socket.id, name)) {
+                await saveGameState(roomId, engine);
+                io.to(roomId).emit('game_update', engine.getState());
+            } else {
+                socket.emit('error', 'Room full or game already started');
+            }
+        } catch (err) {
+            console.error('Join Room Error:', err);
         }
     });
 
-    socket.on('action', async ({ roomId, type, amount }) => {
-        const engine = engines[roomId];
-        if (engine && engine.action(socket.id, type, amount)) {
-            await saveGameState(roomId, engine);
-            io.to(roomId).emit('game_update', engine.getState());
+    socket.on('start_game', async (data) => {
+        try {
+            const { roomId } = data || {};
+            console.log(`Start Game Request: ${roomId}`);
+            if (!roomId || !engines[roomId]) {
+                return socket.emit('error', 'Invalid room identifier');
+            }
+            const engine = engines[roomId];
+            if (engine && engine.startGame()) {
+                await saveGameState(roomId, engine);
+                io.to(roomId).emit('game_update', engine.getState());
+            }
+        } catch (err) {
+            console.error('Start Game Error:', err);
+        }
+    });
+
+    socket.on('action', async (data) => {
+        try {
+            const { roomId, type, amount } = data || {};
+            console.log(`Action Request: ${type} in ${roomId}`);
+            if (!roomId || !engines[roomId]) {
+                return socket.emit('error', 'Session synchronized failed - please re-join');
+            }
+            const engine = engines[roomId];
+            if (engine && engine.action(socket.id, type, amount)) {
+                await saveGameState(roomId, engine);
+                io.to(roomId).emit('game_update', engine.getState());
+            }
+        } catch (err) {
+            console.error('Action Error:', err);
         }
     });
 

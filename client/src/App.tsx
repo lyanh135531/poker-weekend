@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { motion, AnimatePresence } from 'framer-motion';
+import { RefreshCw, Play, User, Users } from 'lucide-react';
 import { GameState } from './types/game';
 import Table from './components/Table';
 
@@ -14,217 +15,231 @@ function App() {
   const [joined, setJoined] = useState(false);
 
   useEffect(() => {
-    console.log('App: Initializing socket connection to', SERVER_URL);
     const newSocket = io(SERVER_URL);
     setSocket(newSocket);
 
-    newSocket.on('connect', () => {
-      console.log('App: Socket connected!', newSocket.id);
-    });
-
     newSocket.on('game_update', (state: GameState) => {
-      console.log('App: Game update received', state);
       setGameState(state);
     });
 
-    newSocket.on('connect_error', (err) => {
-      console.error('App: Socket connection error:', err);
-    });
-
     return () => {
-      console.log('App: Cleaning up socket');
       newSocket.close();
     };
   }, []);
 
-  const joinGame = () => {
+  const handleJoin = (e: React.FormEvent) => {
+    e.preventDefault();
     if (!name || !roomId) return;
-    console.log('App: Joining game', roomId, 'as', name);
     socket?.emit('join_room', { roomId, name });
     setJoined(true);
   };
 
-  const createRoom = () => {
-    const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-    setRoomId(newRoomId);
+  const generateRoomId = () => {
+    const id = Math.random().toString(36).substring(7).toUpperCase();
+    setRoomId(id);
   };
 
-  const startGame = () => {
-    socket?.emit('start_game', { roomId });
-  };
+  if (!joined || !gameState) {
+    return (
+      <div className="layout-container h-screen bg-slate-950">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="glass-ui-gold p-12 rounded-[3.5rem] w-full max-w-lg space-y-12"
+        >
+          <div className="text-center space-y-3">
+            <h1 className="text-7xl font-black tracking-tighter text-white">
+              POKER<span className="text-poker-gold">WKD</span>
+            </h1>
+            <div className="flex items-center justify-center gap-4">
+               <div className="h-[1px] w-8 bg-poker-gold/40" />
+               <p className="text-poker-gold text-[10px] uppercase tracking-[0.5em] font-black">
+                 Elite Series
+               </p>
+               <div className="h-[1px] w-8 bg-poker-gold/40" />
+            </div>
+          </div>
 
-  const handleAction = (type: string, amount: number = 0) => {
-    socket?.emit('action', { roomId, type, amount });
-  };
+          <form onSubmit={handleJoin} className="space-y-8">
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-white/40 font-black ml-2">
+                <User className="w-3 h-3 text-poker-gold" />
+                Player Identity
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="E.g. Phil Ivey"
+                className="input-premium"
+                required
+              />
+            </div>
+
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-white/40 font-black ml-2">
+                <Users className="w-3 h-3 text-poker-gold" />
+                Table Reference
+              </label>
+              <div className="flex gap-3 h-[68px]">
+                <input
+                  type="text"
+                  value={roomId}
+                  onChange={(e) => setRoomId(e.target.value.toUpperCase())}
+                  placeholder="ROOM-ID"
+                  className="input-premium flex-1 font-mono uppercase tracking-widest text-center"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={generateRoomId}
+                  className="btn-outline aspect-square p-0 flex items-center justify-center"
+                  title="Generate ID"
+                >
+                  <RefreshCw className="w-5 h-5 text-poker-gold" />
+                </button>
+              </div>
+            </div>
+
+            <button 
+              type="submit" 
+              disabled={!socket?.connected}
+              className="btn-gold w-full text-sm font-black pt-6 pb-6 disabled:opacity-50 disabled:grayscale transition-all"
+            >
+              {joined && !gameState ? 'Syncing...' : 'Enter Arena'}
+            </button>
+          </form>
+          
+          <div className="text-center">
+            <p className="text-[10px] text-white/20 uppercase tracking-[0.3em] font-medium">
+              {!socket?.connected ? 'Connecting to Master Tower...' : 'Verified Encrypted Session'}
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // 1. Identify local player
+  const me = gameState.players.find((p: any) => p.id === socket?.id);
+
+  // 2. Seating Logic: Rotate players so "me" is always at the bottom (index 0)
+  // This is a "Senior" professional pattern for poker apps.
+  let seatedPlayers = [...gameState.players];
+  if (me) {
+    const meIndex = seatedPlayers.findIndex(p => p.id === me.id);
+    if (meIndex !== -1) {
+      // Rotate array so meIndex becomes 0
+      const head = seatedPlayers.slice(meIndex);
+      const tail = seatedPlayers.slice(0, meIndex);
+      seatedPlayers = [...head, ...tail];
+    }
+  }
 
   return (
-    <div className="fixed inset-0 bg-slate-950 flex flex-col items-center justify-center p-4 sm:p-8">
-      {/* Premium Outer Rim / Frame */}
-      <div className="w-full h-full max-w-5xl max-h-[800px] bg-slate-900 rounded-[3rem] border-[12px] border-slate-800 shadow-[0_0_100px_rgba(0,0,0,0.8)] relative overflow-hidden flex flex-col items-center justify-center">
-        
-        <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(circle_at_center,_var(--tw-gradient-from),_transparent_80%)] from-poker-gold/20"></div>
+    <div className="layout-container h-screen bg-slate-950 select-none overflow-hidden">
+      {/* Upper Table Zone (Geometric Center) */}
+      <div className="flex-1 w-full relative flex items-center justify-center -mt-16">
+        <Table 
+          gameState={{ ...gameState, players: seatedPlayers }} 
+          myId={socket?.id} 
+          onAction={(type: string, amount?: number) => socket?.emit('action', { roomId: gameState.roomId, type, amount })} 
+        />
+      </div>
 
-        {!joined ? (
+      {/* Lower Dashboard Zone (Safe Footer) */}
+      <div className="h-48 w-full flex items-center justify-center p-8 bg-gradient-to-t from-black/40 to-transparent">
+        <ActionBar 
+          player={me} 
+          gameState={gameState} 
+          onAction={(type: string, amount?: number) => socket?.emit('action', { roomId: gameState.roomId, type, amount })} 
+        />
+      </div>
+
+      <AnimatePresence>
+        {gameState.stage === 'WAITING' && (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center px-8 text-center z-10 w-full max-w-md"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 backdrop-blur-3xl"
           >
-            <div className="mb-10 relative">
-              <div className="absolute inset-0 blur-3xl bg-poker-gold/10 -z-10 animate-pulse"></div>
-              <h1 className="text-7xl font-black text-white mb-2 tracking-tighter">
-                POKER<span className="text-poker-gold">WKD</span>
-              </h1>
-              <div className="h-1 w-20 bg-poker-gold mx-auto rounded-full mb-2"></div>
-              <span className="text-poker-gold/60 font-bold tracking-[0.4em] text-[10px] uppercase">Elite Poker Series</span>
-            </div>
-
-            <div className="w-full flex flex-col gap-4 bg-white/5 p-8 rounded-[2.5rem] border border-white/10 backdrop-blur-xl">
-                <div className="flex flex-col gap-1.5 align-start text-left">
-                  <label className="text-[10px] font-bold text-white/40 uppercase ml-4 tracking-widest">Player Identity</label>
-                  <input 
-                    type="text" 
-                    placeholder="E.g. Phil Ivey" 
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="bg-slate-950 border-2 border-white/5 rounded-2xl px-6 py-4 text-white placeholder:text-white/10 w-full outline-none focus:border-poker-gold/50 focus:bg-slate-900 transition-all text-lg font-bold"
-                  />
+            <div className="glass-ui-gold p-16 rounded-[4rem] text-center space-y-10 max-w-sm w-full mx-4 shadow-[0_0_120px_rgba(0,0,0,0.8)] border-poker-gold/10">
+               <div className="relative w-24 h-24 mx-auto">
+                 <RefreshCw className="w-full h-full text-poker-gold animate-spin-slow opacity-10" />
+                 <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-4 h-4 bg-poker-gold rounded-full animate-pulse shadow-[0_0_20px_var(--poker-gold)]" />
+                 </div>
+               </div>
+              <div className="space-y-4">
+                <h2 className="text-poker-gold text-xs uppercase tracking-[0.6em] font-black opacity-60">
+                  Waiting Zone
+                </h2>
+                <div className="flex flex-col items-center">
+                   <p className="text-white text-4xl font-black tracking-tighter">
+                    {gameState.players.length}
+                  </p>
+                  <p className="text-slate-500 text-[10px] uppercase tracking-widest font-black">
+                    Players Seated
+                  </p>
                 </div>
-                
-                <div className="flex flex-col gap-1.5 align-start text-left">
-                  <label className="text-[10px] font-bold text-white/40 uppercase ml-4 tracking-widest">Table Reference</label>
-                  <div className="flex gap-2">
-                    <input 
-                      type="text" 
-                      placeholder="ROOM-ID" 
-                      value={roomId}
-                      onChange={(e) => setRoomId(e.target.value.toUpperCase())}
-                      className="flex-1 bg-slate-950 border-2 border-white/5 rounded-2xl px-6 py-4 text-white placeholder:text-white/10 outline-none focus:border-poker-gold/50 focus:bg-slate-900 transition-all text-lg font-bold uppercase tracking-widest"
-                    />
-                    <button 
-                      onClick={createRoom}
-                      className="bg-poker-gold/10 border-2 border-poker-gold/20 text-poker-gold font-bold px-5 py-4 rounded-2xl hover:bg-poker-gold/20 transition-all text-xs uppercase tracking-tighter"
-                    >
-                      New
-                    </button>
-                  </div>
-                </div>
-
+              </div>
+              
+              {gameState.players.length >= 2 && (
                 <button 
-                  onClick={joinGame}
-                  disabled={!name || !roomId}
-                  className="w-full bg-poker-gold text-poker-green-dark font-black px-12 py-5 rounded-2xl shadow-xl active:scale-95 disabled:opacity-30 disabled:grayscale transition-all text-xl uppercase tracking-[0.2em] mt-4"
+                  onClick={() => socket?.emit('start_game', { roomId: gameState.roomId })}
+                  className="btn-gold w-full text-sm font-black py-6 flex items-center justify-center gap-3"
                 >
-                  Enter Arena
+                  <Play className="fill-current w-4 h-4" />
+                  Initiate Hand
                 </button>
+              )}
             </div>
           </motion.div>
-        ) : (
-          <AnimatePresence mode="wait">
-            {gameState ? (
-              <div className="w-full h-full relative flex flex-col overflow-hidden">
-                <Table 
-                  gameState={gameState} 
-                  myId={socket?.id || ''} 
-                  onAction={handleAction} 
-                />
-                
-                {/* Fixed Footer Actions */}
-                <ActionBar 
-                    player={gameState.players.find(p => p.id === socket?.id)}
-                    gameState={gameState}
-                    onAction={handleAction}
-                />
-
-                {gameState.stage === 'WAITING' && (
-                  <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm">
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="bg-slate-900 border border-white/10 p-10 rounded-[3rem] shadow-2xl flex flex-col items-center gap-6"
-                    >
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-poker-gold blur-2xl opacity-20 animate-pulse"></div>
-                        <div className="w-20 h-20 rounded-full border-4 border-poker-gold/20 flex items-center justify-center relative">
-                           <div className="w-12 h-12 rounded-full border-4 border-poker-gold border-t-transparent animate-spin"></div>
-                        </div>
-                      </div>
-
-                      <div className="text-center">
-                        <h3 className="text-poker-gold font-black uppercase tracking-[0.3em] text-sm mb-1">Waiting Zone</h3>
-                        <p className="text-white/60 text-xs font-medium uppercase tracking-widest">
-                            {gameState.players.length} / 10 Players Seated
-                        </p>
-                      </div>
-                      
-                      {gameState.players.length >= 2 && (
-                          <button 
-                              onClick={startGame}
-                              className="bg-white text-poker-green-dark font-black px-12 py-4 rounded-2xl shadow-xl text-lg uppercase tracking-widest hover:scale-105 active:scale-95 transition-all mt-2"
-                          >
-                              Initiate Hand
-                          </button>
-                      )}
-                    </motion.div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <motion.div 
-                key="loading"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex flex-col items-center gap-4"
-               >
-                 <div className="w-8 h-8 rounded-full border-2 border-poker-gold border-t-transparent animate-spin"></div>
-                 <div className="text-poker-gold font-black text-xs tracking-[0.5em] uppercase">SYNCHRONIZING...</div>
-               </motion.div>
-            )}
-          </AnimatePresence>
         )}
-      </div>
+      </AnimatePresence>
     </div>
   );
 }
 
-
-interface ActionBarProps {
-    player: any;
-    gameState: any;
-    onAction: (type: string, amount?: number) => void;
-}
-
-const ActionBar: React.FC<ActionBarProps> = ({ player, gameState, onAction }) => {
+const ActionBar: React.FC<any> = ({ player, gameState, onAction }) => {
+    // Only show if it's the local player's turn
     if (!player || !player.isTurn) return null;
 
-    const me = player;
-    const maxBet = Math.max(...gameState.players.map((p: any) => p.bet));
-    const callAmount = maxBet - me.bet;
+    const maxBet = Math.max(...gameState.players.map((p: any) => p.bet), 0);
+    const callAmount = maxBet - player.bet;
 
     return (
         <motion.div 
-            initial={{ y: 100 }}
-            animate={{ y: 0 }}
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/80 backdrop-blur-3xl border border-white/10 p-3 rounded-3xl shadow-2xl flex items-center gap-3 w-[90%] max-w-lg"
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="glass-ui-gold p-6 rounded-[2.5rem] flex items-center gap-6 w-full max-w-2xl shadow-[0_-20px_60px_rgba(0,0,0,0.5)]"
         >
-            <button 
-                onClick={() => onAction('fold')}
-                className="flex-1 bg-red-500/10 border border-red-500/20 text-red-500 font-bold py-4 rounded-2xl hover:bg-red-500 hover:text-white transition-all text-xs uppercase tracking-widest"
-            >
-                Fold
-            </button>
-            <button 
-                onClick={() => onAction('call')}
-                className="flex-[2] bg-white border border-white text-slate-950 font-black py-4 rounded-2xl hover:scale-105 transition-all text-xs uppercase tracking-[0.2em]"
-            >
-                {callAmount > 0 ? `Call $${callAmount}` : 'Check'}
-            </button>
-            <button 
-                onClick={() => onAction('raise', 50)}
-                className="flex-1 bg-poker-gold text-poker-green-dark font-black py-4 rounded-2xl shadow-lg hover:brightness-110 transition-all text-xs uppercase tracking-widest"
-            >
-                Raise
-            </button>
+            <div className="flex-1 space-y-1 pl-4 border-l-2 border-white/5">
+               <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Pot Requirement</p>
+               <p className="text-xl font-black text-white">${callAmount}</p>
+            </div>
+
+            <div className="flex-[3] flex items-center gap-4">
+              <button 
+                  onClick={() => onAction('fold')}
+                  className="flex-1 bg-red-500/5 border-2 border-red-500/20 text-red-500 font-bold py-5 rounded-2xl hover:bg-red-500 hover:text-white transition-all text-xs uppercase tracking-[0.2em]"
+              >
+                  Fold
+              </button>
+              <button 
+                  onClick={() => onAction('call')}
+                  className="flex-[2] bg-white text-slate-950 font-black py-5 rounded-2xl hover:scale-105 active:scale-95 transition-all text-xs uppercase tracking-[0.4em] shadow-2xl"
+              >
+                  {callAmount > 0 ? `Call $${callAmount}` : 'Check'}
+              </button>
+              <button 
+                  onClick={() => onAction('raise', 50)}
+                  className="flex-1 btn-gold py-5 rounded-2xl text-xs uppercase tracking-[0.2em]"
+              >
+                  Raise
+              </button>
+            </div>
         </motion.div>
     );
 };
