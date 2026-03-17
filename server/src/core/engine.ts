@@ -34,7 +34,40 @@ export class PokerEngine {
   }
 
   removePlayer(id: string) {
-    this.state.players = this.state.players.filter(p => p.id !== id);
+    const playerIndex = this.state.players.findIndex(p => p.id === id);
+    if (playerIndex === -1) return;
+
+    // Handle index shifting if game is active
+    if (this.state.stage !== GameStage.WAITING) {
+      // If the player leaving was the current turn, move to next
+      if (this.state.currentTurnIndex === playerIndex) {
+        this.nextTurn();
+      } else if (this.state.currentTurnIndex > playerIndex) {
+        // Shift turn index back because the array will shrink
+        this.state.currentTurnIndex--;
+      }
+
+      // Shift dealer index back if needed
+      if (this.state.dealerIndex >= playerIndex && this.state.dealerIndex > 0) {
+        this.state.dealerIndex--;
+      }
+    }
+
+    this.state.players.splice(playerIndex, 1);
+
+    // Cancel game if too few players
+    if (this.state.players.length < 2 && this.state.stage !== GameStage.WAITING) {
+      this.state.stage = GameStage.WAITING;
+      this.state.communityCards = [];
+      this.state.pot = 0;
+      this.state.players.forEach(p => {
+        p.cards = [];
+        p.isFolded = false;
+        p.bet = 0;
+      });
+    }
+
+    this.updateTurns();
   }
 
   startGame() {

@@ -50,8 +50,8 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
               </motion.div>
             </div>
 
-            {/* Community Card Sockets - Stable Horizontal Grid */}
-            <div className="absolute top-[68%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-4">
+            {/* Community Card Sockets - Stable Horizontal Grid (Slightly higher to avoid hole card overlap) */}
+            <div className="absolute top-[64%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-4">
                {[0, 1, 2, 3, 4].map(idx => (
                  <div key={idx} className="card-socket relative flex items-center justify-center">
                     <AnimatePresence mode="popLayout">

@@ -39,6 +39,14 @@ function App() {
     setRoomId(id);
   };
 
+  const handleLeave = () => {
+    if (socket && roomId) {
+      socket.emit('leave_room', { roomId });
+      setJoined(false);
+      setGameState(null);
+    }
+  };
+
   if (!joined || !gameState) {
     return (
       <div className="layout-container h-screen bg-slate-950">
@@ -140,6 +148,14 @@ function App() {
     <div className="layout-container h-screen bg-slate-950 select-none overflow-hidden">
       {/* Upper Table Zone (Geometric Center) */}
       <div className="flex-1 w-full relative flex items-center justify-center -mt-16">
+        <div className="absolute top-8 right-8 z-50">
+          <button 
+            onClick={handleLeave}
+            className="flex items-center gap-2 px-6 py-3 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all text-[10px] uppercase tracking-[0.3em] font-black"
+          >
+            Leave Table
+          </button>
+        </div>
         <Table 
           gameState={{ ...gameState, players: seatedPlayers }} 
           myId={socket?.id} 

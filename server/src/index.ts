@@ -105,9 +105,38 @@ async function startServer() {
         }
     });
 
+    socket.on('leave_room', async (data) => {
+        try {
+            const { roomId } = data || {};
+            if (roomId && engines[roomId]) {
+                const engine = engines[roomId];
+                engine.removePlayer(socket.id);
+                io.to(roomId).emit('game_update', engine.getState());
+                socket.leave(roomId);
+                await saveGameState(roomId, engine);
+            }
+        } catch (err) {
+            console.error('Leave Room Error:', err);
+        }
+    });
+
+    socket.on('disconnecting', async () => {
+        try {
+            for (const roomId of socket.rooms) {
+                if (engines[roomId]) {
+                    const engine = engines[roomId];
+                    engine.removePlayer(socket.id);
+                    io.to(roomId).emit('game_update', engine.getState());
+                    await saveGameState(roomId, engine);
+                }
+            }
+        } catch (err) {
+            console.error('Disconnecting Error:', err);
+        }
+    });
+
     socket.on('disconnect', () => {
       console.log(`User disconnected: ${socket.id}`);
-      // In a real app, don't remove immediately. Set an 'away' flag for reconnection.
     });
   });
 
