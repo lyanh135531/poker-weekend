@@ -21,19 +21,27 @@ export class PokerEngine {
     };
   }
 
+  private playerStats: Record<string, number> = {}; // name -> chips persistence
+
   addPlayer(id: string, name: string) {
     if (this.state.players.length >= 10) return false;
+    
+    // Persist chips by name if they were here before
+    const chips = this.playerStats[name] !== undefined ? this.playerStats[name] : 1000;
+    
     this.state.players.push({
       id,
       name,
-      chips: 1000,
+      chips,
       cards: [],
       isFolded: false,
       isTurn: false,
       bet: 0,
       hasActed: false,
-      isDealer: false
+      isDealer: this.state.players.length === 0 // First player is dealer
     });
+    
+    this.playerStats[name] = chips;
     return true;
   }
 
@@ -84,6 +92,7 @@ export class PokerEngine {
     this.state.pot = 0;
     this.state.minRaise = 20; // Default BB
     this.state.lastRaiserIndex = null;
+    this.state.lastWinner = null;
 
     // Deal hole cards & reset player state
     this.state.players.forEach(p => {
@@ -126,6 +135,9 @@ export class PokerEngine {
     player.chips -= amount;
     player.bet += amount;
     this.state.pot += amount;
+    
+    // Sync persistence
+    this.playerStats[player.name] = player.chips;
     return true;
   }
 
@@ -241,13 +253,18 @@ export class PokerEngine {
     this.state.currentTurnIndex = nextIndex;
   }
 
-  private resolveWinner() {
+  resolveWinner() {
     const activePlayers = this.state.players.filter(p => !p.isFolded);
     if (activePlayers.length === 0) return;
 
+    let winner: Player;
+    let handName = "High Card";
+    let winningCards: string[] = [];
+
     if (activePlayers.length === 1) {
         // Everyone else folded
-        activePlayers[0].chips += this.state.pot;
+        winner = activePlayers[0];
+        handName = "Fold Victory";
     } else {
         const evaluations = activePlayers.map(p => ({
             player: p,
@@ -255,13 +272,44 @@ export class PokerEngine {
         }));
 
         evaluations.sort((a, b) => b.eval.score - a.eval.score);
-        const winner = evaluations[0].player;
-        winner.chips += this.state.pot;
+        winner = evaluations[0].player;
+        handName = evaluations[0].eval.name;
+        // The simplified evaluator doesn't return the best 5-card hand specifically,
+        // so we'll just show the player's hole cards for now.
+        winningCards = winner.cards;
     }
     
+    const potWon = this.state.pot;
+    winner.chips += potWon;
+    this.playerStats[winner.name] = winner.chips;
+    
+    // Set temporary lastWinner state for Showdown
+    this.state.lastWinner = {
+        name: winner.name,
+        amount: potWon,
+        handName: handName,
+        cards: winningCards
+    };
+
     this.state.pot = 0;
+    this.state.stage = GameStage.SHOWDOWN;
+    this.state.currentTurnIndex = -1; // No one's turn during showdown
+    this.updateTurns();
+  }
+
+  resetForNextHand() {
     this.state.stage = GameStage.WAITING;
+    this.state.communityCards = [];
+    this.state.pot = 0;
+    this.state.lastWinner = null;
+    this.state.players.forEach(p => {
+        p.cards = [];
+        p.isFolded = false;
+        p.bet = 0;
+        p.hasActed = false;
+    });
     this.state.dealerIndex = (this.state.dealerIndex + 1) % this.state.players.length;
+    this.updateTurns();
   }
 
   private updateTurns() {

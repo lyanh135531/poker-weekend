@@ -97,8 +97,8 @@ async function startServer() {
             }
             const engine = engines[roomId];
             if (engine && engine.action(socket.id, type, amount)) {
-                await saveGameState(roomId, engine);
                 io.to(roomId).emit('game_update', engine.getState());
+                await saveGameState(roomId, engine);
             }
         } catch (err) {
             console.error('Action Error:', err);

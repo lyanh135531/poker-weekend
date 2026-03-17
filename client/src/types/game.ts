@@ -30,4 +30,10 @@ export interface GameState {
   stage: GameStage | string;
   dealerIndex: number;
   currentTurnIndex: number;
+  lastWinner?: {
+    name: string;
+    amount: number;
+    handName: string;
+    cards: string[];
+  } | null;
 }

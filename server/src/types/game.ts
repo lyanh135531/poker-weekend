@@ -34,4 +34,10 @@ export interface GameState {
   currentTurnIndex: number;
   minRaise: number;
   lastRaiserIndex: number | null;
+  lastWinner?: {
+    name: string;
+    amount: number;
+    handName: string;
+    cards: string[];
+  } | null;
 }
