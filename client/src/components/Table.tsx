@@ -11,6 +11,29 @@ interface TableProps {
 }
 
 const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
+  // 1. Reorder players so "Hero" (isMe) is always at the bottom center
+  const heroIndex = gameState.players.findIndex(p => p.id === myId);
+  const reorderedPlayers = heroIndex !== -1 
+    ? [...gameState.players.slice(heroIndex), ...gameState.players.slice(0, heroIndex)]
+    : gameState.players;
+
+  // 2. Map players to fixed 10-slot "Seating Chart" (Skipping Slot 5 for Pot)
+  // Slots: 0 (Bottom), 1, 2, 3, 4 (Right), 5 (TOP - RESERVED), 6, 7, 8, 9 (Left)
+  const availableSeats = [0, 1, 2, 3, 4, 6, 7, 8, 9];
+  
+  // Calculate relative seat index based on reordered index and total players
+  // This ensures even distribution across the 9 available slots
+  const playersWithSeats = reorderedPlayers.map((player, idx) => {
+    // For Hero (idx 0), we always want seat 0
+    if (idx === 0) return { ...player, seatIndex: 0 };
+    
+    // For others, distribute across the remaining 8 seats (1-4, 6-9)
+    // We map idx [1...N-1] to availableSeats [1...8]
+    // Simple even distribution formula
+    const seatMapIdx = Math.floor((idx / (reorderedPlayers.length || 1)) * availableSeats.length);
+    return { ...player, seatIndex: availableSeats[seatMapIdx] };
+  });
+
   return (
     <div className="relative w-full h-full flex items-center justify-center pointer-events-none">
       
@@ -32,26 +55,22 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
             {/* Center Felt Glow */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(41,120,60,0.4)_0%,_transparent_70%)] opacity-60" />
             
-            {/* Geometric Branding - Professional & Subtle */}
-            <div className="absolute top-[32%] left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 select-none text-center">
-               <h2 className="text-7xl font-black tracking-tighter text-white italic">POKER<span className="text-slate-200">WKD</span></h2>
-               <p className="text-[10px] uppercase tracking-[1em] font-black text-white mt-2">Elite Series • MMXXIV</p>
-            </div>
-
-            {/* Total Pot - Anchored Buffer Zone (Centered Wrapper) */}
-            <div className="absolute top-[48%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+            {/* Total Pot - Relocated to Top Center (Slot 5) */}
+            <div className="absolute top-[20%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
               <motion.div 
-                 animate={{ y: [0, -5, 0] }}
-                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                 className="glass-ui-gold rounded-full px-10 py-3 flex items-center gap-4 shadow-[0_20px_50px_rgba(0,0,0,0.5)] whitespace-nowrap"
+                 animate={{ scale: [1, 1.02, 1] }}
+                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                 className="glass-ui-gold rounded-full px-6 py-1.5 flex items-center justify-center shadow-[0_10px_40px_rgba(0,0,0,0.6)] border-poker-gold/30"
               >
-                 <span className="text-[10px] uppercase font-black tracking-[0.4em] text-poker-gold opacity-60">Pot Value</span>
-                 <span className="text-3xl font-black text-white">${gameState.pot}</span>
+                 <span className="text-2xl font-black text-white flex items-center gap-1.5">
+                    <span className="text-poker-gold text-base opacity-80">$</span>
+                    {gameState.pot}
+                 </span>
               </motion.div>
             </div>
 
-            {/* Community Card Sockets - Stable Horizontal Grid (Slightly higher to avoid hole card overlap) */}
-            <div className="absolute top-[64%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-4">
+            {/* Community Card Sockets - Dead Center Focus */}
+            <div className="absolute top-[50%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-4">
                {[0, 1, 2, 3, 4].map(idx => (
                  <div key={idx} className="card-socket relative flex items-center justify-center">
                     <AnimatePresence mode="popLayout">
@@ -73,14 +92,14 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
         </div>
       </div>
 
-      {/* 2. Responsive Player Layer - Independent Position System */}
+      {/* 2. Responsive Player Layer - Fixed Slot System */}
       <div className="absolute inset-0 z-30 pointer-events-none">
-        {gameState.players.map((player: any, idx: number) => (
+        {playersWithSeats.map((player) => (
           <Player 
             key={player.id} 
             player={player} 
-            idx={idx} 
-            totalPlayers={gameState.players.length}
+            seatIndex={player.seatIndex} 
+            totalSeats={10}
             isMe={player.id === myId}
             isDealer={player.isDealer}
           />

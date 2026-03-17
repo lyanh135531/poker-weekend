@@ -12,7 +12,7 @@
   /* Responsive Design Tokens - Tuned for fluid scaling */
   --table-width: clamp(280px, 85vw, 1100px);
   --table-height: clamp(240px, 60vh, 600px); /* Slightly increased min-height for better mobile vertical space */
-  --player-plate-width: clamp(120px, 18vw, 176px); /* Scaled down min-width for mobile */
+  --player-plate-width: clamp(80px, 12vw, 130px); /* Narrowed further as requested */
   --card-width: clamp(30px, 5vw, 65px); /* Scaled down min-width for mobile */
   --bet-badge-offset: clamp(25%, 5vh, 40%);
 }
@@ -62,7 +62,7 @@
   }
 
   .card-socket {
-    @apply absolute w-12 h-16 md:w-20 md:h-28 rounded-xl border border-white/5 bg-black/10;
+    @apply w-12 h-16 md:w-20 md:h-28 rounded-xl border border-white/5 bg-black/10;
   }
   
   .animate-spin-slow {

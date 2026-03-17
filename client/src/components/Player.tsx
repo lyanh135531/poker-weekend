@@ -6,31 +6,28 @@ import { Crown, User } from 'lucide-react';
 
 interface PlayerProps {
   player: PlayerType;
-  idx: number;
-  totalPlayers: number;
+  seatIndex: number;
+  totalSeats: number;
   isMe: boolean;
   isDealer?: boolean;
 }
 
-const Player: React.FC<PlayerProps> = ({ player, idx, totalPlayers, isMe, isDealer }) => {
-  // Elliptical distribution for seating - tuned for better screen space
-  // Safety check for totalPlayers to avoid division by zero
-  const safeTotal = totalPlayers || 1;
-  const angle = (idx / safeTotal) * 2 * Math.PI + Math.PI / 2;
-  const xRadius = 45; // percentage
-  const yRadius = 40; // percentage
+const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, isDealer }) => {
+  // Elliptical distribution for seating - fixed 10-slot slot system
+  const angle = (seatIndex / totalSeats) * 2 * Math.PI + Math.PI / 2;
+  const xRadius = 40; // percentage
+  const yRadius = 35; // percentage
 
   const left = 50 + xRadius * Math.cos(angle);
   const top = 50 + yRadius * Math.sin(angle);
 
-  // Card inward offset - significant enough to clear player plates and ensure visibility
-  const cardOffset = 18;
+  // Card inward offset - slightly tighter
+  const cardOffset = 12;
   const cardLeft = 50 + (xRadius - cardOffset) * Math.cos(angle);
   const cardTop = 50 + (yRadius - cardOffset) * Math.sin(angle);
 
-  // Bet inward offset - pulled further onto the felt to avoid overlap with player box
-  // Pulled in by ~30% for distinct visibility on all screen sizes
-  const betOffset = 30;
+  // Bet inward offset - pulled closer to the player plate
+  const betOffset = 22;
   const betLeft = 48 + (xRadius - betOffset) * Math.cos(angle);
   const betTop = 48 + (yRadius - betOffset) * Math.sin(angle);
 
@@ -47,7 +44,7 @@ const Player: React.FC<PlayerProps> = ({ player, idx, totalPlayers, isMe, isDeal
           height: 'calc(var(--card-width) * 1.4)'
         }}
       >
-        <div className="flex -space-x-10">
+        <div className="flex -space-x-5">
           <AnimatePresence mode="popLayout">
             {player.cards.map((card, i) => (
               <motion.div
@@ -81,7 +78,7 @@ const Player: React.FC<PlayerProps> = ({ player, idx, totalPlayers, isMe, isDeal
 
       {/* 3. Unified Player Plate - High-fidelity and aligned */}
       <div
-        className="absolute flex flex-col items-center gap-3 transition-all duration-700 z-30"
+        className="absolute flex flex-col items-center gap-1.5 transition-all duration-700 z-30"
         style={{
           left: `${left}%`,
           top: `${top}%`,
@@ -91,30 +88,30 @@ const Player: React.FC<PlayerProps> = ({ player, idx, totalPlayers, isMe, isDeal
       >
         <div className={`relative p-1 rounded-full transition-all duration-500 scale-110 ${player.isTurn ? 'animate-turn-glow' : ''}`}>
           {/* Avatar Circle */}
-          <div className={`w-14 h-14 rounded-full border-2 border-white/20 overflow-hidden shadow-2xl relative bg-slate-900 ${isMe ? 'ring-2 ring-poker-gold ring-offset-4 ring-offset-slate-950' : ''}`}>
+          <div className={`w-11 h-11 rounded-full border-2 border-white/10 overflow-hidden shadow-2xl relative bg-slate-900 ${isMe ? 'ring-2 ring-poker-gold ring-offset-4 ring-offset-slate-950' : ''}`}>
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 outline-none">
-              <User className="w-7 h-7 text-slate-500/50" />
+              <User className="w-6 h-6 text-slate-500/50" />
             </div>
-            {/* Dealer Marker */}
-            {isDealer && (
-              <div className="absolute -top-1 -right-1 bg-poker-gold text-slate-950 p-1 rounded-full shadow-lg z-50">
-                <Crown className="w-3 h-3 fill-current" />
-              </div>
-            )}
           </div>
+          {/* Dealer Marker - Moved outside overflow-hidden to prevent clipping */}
+          {isDealer && (
+            <div className="absolute -top-1 -right-1 bg-poker-gold text-slate-950 p-1.5 rounded-full shadow-[0_5px_15px_rgba(0,0,0,0.5)] z-50 ring-2 ring-slate-950">
+              <Crown className="w-3 h-3 fill-current" />
+            </div>
+          )}
         </div>
 
-        {/* Info Box - Glassmorphic Container */}
-        <div className="glass-ui w-full rounded-[1.2rem] p-3 space-y-1 text-center shadow-2xl relative overflow-hidden border-white/10 group">
-          <div className="flex items-center justify-center gap-2">
-            <span className={`w-1.5 h-1.5 rounded-full ${player.isTurn ? 'bg-poker-gold animate-pulse' : 'bg-slate-600'}`} />
-            <p className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em] truncate">
+        {/* Info Box - Glassmorphic Container (Narrowed & Tighter) */}
+        <div className="glass-ui w-full rounded-[0.8rem] px-2 py-1.5 space-y-0 text-center shadow-2xl relative overflow-hidden border-white/10 group">
+          <div className="flex items-center justify-center gap-1.5">
+            <span className={`w-1 h-1 rounded-full ${player.isTurn ? 'bg-poker-gold animate-pulse' : 'bg-slate-600'}`} />
+            <p className="text-[9px] font-black text-white/50 uppercase tracking-[0.2em] truncate">
               {player.name}
             </p>
           </div>
 
-          <p className="text-lg font-black text-white tabular-nums tracking-tight">
-            <span className="text-poker-gold/40 text-sm mr-0.5">$</span>{player.chips}
+          <p className="text-base font-black text-white tabular-nums tracking-tight">
+            <span className="text-poker-gold/40 text-xs mr-0.5">$</span>{player.chips}
           </p>
 
           {/* Progress bar for turn */}
