@@ -46,11 +46,13 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
       >
         <div className="flex -space-x-5">
           <AnimatePresence mode="popLayout">
-            {player.cards.map((card, i) => (
+            {!player.isFolded && player.cards.map((card, i) => (
               <motion.div
                 key={i}
                 initial={{ scale: 0, rotate: -20, y: 30 }}
                 animate={{ scale: 1, rotate: (i === 0 ? -8 : 8), y: 0 }}
+                exit={{ scale: 0, opacity: 0, y: 40, rotate: (i === 0 ? -40 : 40) }}
+                transition={{ duration: 0.5, ease: "backIn" }}
                 className="shadow-[0_20px_40px_rgba(0,0,0,0.6)]"
               >
                 <Card code={card} hidden={!isMe} />
@@ -78,7 +80,7 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
 
       {/* 3. Unified Player Plate - High-fidelity and aligned */}
       <div
-        className="absolute flex flex-col items-center gap-1.5 transition-all duration-700 z-30"
+        className={`absolute flex flex-col items-center gap-1.5 transition-all duration-700 z-30 ${player.isFolded ? 'opacity-40 grayscale-[0.8] scale-95' : 'opacity-100 grayscale-0 scale-100'}`}
         style={{
           left: `${left}%`,
           top: `${top}%`,

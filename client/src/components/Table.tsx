@@ -3,6 +3,7 @@ import { GameState } from '../types/game';
 import Player from './Player';
 import Card from './Card';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Coins } from 'lucide-react';
 
 interface TableProps {
   gameState: GameState;
@@ -55,17 +56,53 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
             {/* Center Felt Glow */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(41,120,60,0.4)_0%,_transparent_70%)] opacity-60" />
             
-            {/* Total Pot - Relocated to Top Center (Slot 5) */}
+            {/* Total Pot - Luxury Floating Badge */}
             <div className="absolute top-[20%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
               <motion.div 
-                 animate={{ scale: [1, 1.02, 1] }}
-                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                 className="glass-ui-gold rounded-full px-6 py-1.5 flex items-center justify-center shadow-[0_10px_40px_rgba(0,0,0,0.6)] border-poker-gold/30"
+                 initial={{ y: 0 }}
+                 animate={{ 
+                   y: [-2, 2, -2],
+                   scale: [1, 1.01, 1]
+                 }}
+                 transition={{ 
+                   duration: 4, 
+                   repeat: Infinity, 
+                   ease: "easeInOut" 
+                 }}
+                 className="flex flex-col items-center gap-1"
               >
-                 <span className="text-2xl font-black text-white flex items-center gap-1.5">
-                    <span className="text-poker-gold text-base opacity-80">$</span>
-                    {gameState.pot}
-                 </span>
+                <div className="glass-ui-luxury rounded-3xl px-8 py-3 flex flex-col items-center justify-center shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_20px_rgba(212,175,55,0.1)] border border-poker-gold/20 relative group overflow-hidden">
+                  {/* Subtle Background Inner Glow */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-poker-gold/10 to-transparent opacity-30 group-hover:opacity-50 transition-opacity duration-700" />
+                  
+                  <div className="flex items-center gap-3 relative z-10">
+                    <div className="bg-poker-gold/10 p-2 rounded-xl border border-poker-gold/20 shadow-inner">
+                      <Coins className="w-5 h-5 text-poker-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]" />
+                    </div>
+                    
+                    <div className="flex flex-col items-start leading-tight">
+                      <span className="text-[10px] font-black text-poker-gold/60 uppercase tracking-[0.3em] mb-0.5">
+                        Total Pot
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-poker-gold text-lg font-black">$</span>
+                        <span className="text-3xl font-black text-white tabular-nums tracking-tighter drop-shadow-xl">
+                          {gameState.pot.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Shimmer Effect */}
+                  <motion.div 
+                    animate={{ x: ['-200%', '200%'] }}
+                    transition={{ duration: 3, repeat: Infinity, repeatDelay: 5, ease: "easeInOut" }}
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-12"
+                  />
+                </div>
+                
+                {/* Visual Anchor/Shadow on Felt */}
+                <div className="w-24 h-4 bg-black/40 blur-xl rounded-[100%] mt-2 mx-auto" />
               </motion.div>
             </div>
 
