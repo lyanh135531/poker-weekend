@@ -84,6 +84,12 @@ export class PokerEngine {
 
   startGame() {
     if (this.state.players.length < 2) return false;
+
+    // Rotate dealer role clockwise if starting a subsequent hand
+    if (this.state.stage === GameStage.SHOWDOWN || this.state.lastWinner) {
+      this.state.dealerIndex = (this.state.dealerIndex + 1) % this.state.players.length;
+    }
+
     this.deck.reset();
     this.deck.shuffle();
     

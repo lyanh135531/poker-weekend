@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCw, Play, User, Users, Coins } from 'lucide-react';
 import { GameState } from './types/game';
 import Table from './components/Table';
+import Card from './components/Card';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:4000';
 
@@ -152,12 +153,25 @@ function App() {
           <Table 
             gameState={{ ...gameState, players: seatedPlayers }} 
             myId={socket?.id} 
-            onAction={(type: string, amount?: number) => socket?.emit('action', { roomId: gameState.roomId, type, amount })} 
+            onAction={(type: string, amount?: number) => {
+              if (type === 'start_game') {
+                socket?.emit('start_game', { roomId: gameState.roomId });
+              } else {
+                socket?.emit('action', { roomId: gameState.roomId, type, amount });
+              }
+            }} 
           />
         </div>
       </div>
 
       {/* Floating UI Elements */}
+      <div className="absolute top-8 left-8 z-50">
+        <div className="glass-ui-gold px-6 py-3 rounded-full flex flex-col items-center justify-center border border-poker-gold/20 shadow-[0_0_30px_rgba(212,175,55,0.1)]">
+           <span className="text-[8px] uppercase tracking-[0.4em] text-poker-gold/60 font-black mb-0.5 ml-1">Table Ref</span>
+           <span className="text-sm font-black text-white tracking-widest font-mono uppercase">{gameState.roomId}</span>
+        </div>
+      </div>
+
       <div className="absolute top-8 right-8 z-50">
         <button 
           onClick={handleLeave}
@@ -171,62 +185,62 @@ function App() {
         <ActionBar 
           player={me} 
           gameState={gameState} 
-          onAction={(type: string, amount?: number) => socket?.emit('action', { roomId: gameState.roomId, type, amount })} 
+          onAction={(type: string, amount?: number) => {
+            if (type === 'start_game') {
+              socket?.emit('start_game', { roomId: gameState.roomId });
+            } else {
+              socket?.emit('action', { roomId: gameState.roomId, type, amount });
+            }
+          }} 
         />
       </div>
 
-      <AnimatePresence>
-        {gameState.stage === 'SHOWDOWN' && gameState.lastWinner && (
-          <WinnerOverlay winner={gameState.lastWinner} />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {(gameState.stage === 'WAITING' || gameState.stage === 'SHOWDOWN') && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className={`fixed inset-0 z-50 flex items-center justify-center ${gameState.stage === 'WAITING' ? 'bg-slate-950/95 backdrop-blur-3xl' : 'pointer-events-none'}`}
-          >
-            <div className={`glass-ui-gold p-16 rounded-[4rem] text-center space-y-10 max-w-sm w-full mx-4 shadow-[0_0_120px_rgba(0,0,0,0.8)] border-poker-gold/10 pointer-events-auto ${gameState.stage === 'SHOWDOWN' ? 'mt-[30rem]' : ''}`}>
-               <div className="relative w-24 h-24 mx-auto">
-                 <RefreshCw className="w-full h-full text-poker-gold animate-spin-slow opacity-10" />
-                 <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-4 h-4 bg-poker-gold rounded-full animate-pulse shadow-[0_0_20px_var(--poker-gold)]" />
-                 </div>
-               </div>
-              <div className="space-y-4">
-                <h2 className="text-poker-gold text-xs uppercase tracking-[0.6em] font-black opacity-60">
-                  {gameState.stage === 'SHOWDOWN' ? 'Intermission' : 'Waiting Zone'}
-                </h2>
-                <div className="flex flex-col items-center">
-                   <p className="text-white text-4xl font-black tracking-tighter">
-                    {gameState.players.length}
-                  </p>
-                  <p className="text-slate-500 text-[10px] uppercase tracking-widest font-black">
-                    Players Seated
-                  </p>
-                </div>
-              </div>
-              
-              {((gameState.stage === 'WAITING' && gameState.players.length >= 2) || 
-                (gameState.stage === 'SHOWDOWN')) && me?.isDealer && (
-                <button 
-                  onClick={() => socket?.emit('start_game', { roomId: gameState.roomId })}
-                  className="btn-gold w-full text-sm font-black py-6 flex items-center justify-center gap-3"
-                >
-                  <Play className="fill-current w-4 h-4" />
-                  {gameState.stage === 'SHOWDOWN' ? 'Start Next Hand' : 'Initiate Hand'}
-                </button>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
+
+const BetSlider: React.FC<{ 
+  min: number; 
+  max: number; 
+  value: number; 
+  onChange: (val: number) => void;
+  pot: number;
+}> = ({ min, max, value, onChange, pot }) => {
+  return (
+    <div className="space-y-2 px-1">
+      <div className="flex items-center justify-between">
+        <span className="text-[9px] uppercase tracking-widest text-white/30 font-black">Bet</span>
+        <span className="text-base font-black text-poker-gold shadow-sm">${value}</span>
+      </div>
+      
+      <input 
+        type="range" 
+        min={min} 
+        max={max} 
+        value={value} 
+        onChange={(e) => onChange(parseInt(e.target.value))}
+        className="gold-slider h-1"
+      />
+
+      <div className="grid grid-cols-4 gap-1.5">
+        {[
+          { label: 'Min', val: min },
+          { label: '1/2', val: Math.min(max, Math.max(min, Math.floor(pot / 2))) },
+          { label: 'Pot', val: Math.min(max, Math.max(min, pot)) },
+          { label: 'All', val: max }
+        ].map((p, i) => (
+          <button 
+            key={i}
+            onClick={() => onChange(p.val)}
+            className="bg-white/5 border border-white/5 text-[7px] font-black uppercase tracking-tighter py-1 rounded hover:bg-white/10 transition-colors"
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const ActionBar: React.FC<any> = ({ player, gameState, onAction }) => {
     // Only show if it's the local player's turn
@@ -234,115 +248,77 @@ const ActionBar: React.FC<any> = ({ player, gameState, onAction }) => {
 
     const maxBet = Math.max(...gameState.players.map((p: any) => p.bet), 0);
     const callAmount = maxBet - player.bet;
+    const minRaise = gameState.minRaise || 20;
+    
+    // Total amount needed to raise (callAmount + minRaise)
+    const minRaiseTotal = callAmount + minRaise;
+    const maxPossbileBet = player.chips; // All-in
+
+    const [betAmount, setBetAmount] = React.useState(Math.min(maxPossbileBet, minRaiseTotal));
+
+    // Sync betAmount if it falls out of bounds (e.g. after someone else raises)
+    React.useEffect(() => {
+      setBetAmount(prev => Math.min(maxPossbileBet, Math.max(prev, minRaiseTotal)));
+    }, [minRaiseTotal, maxPossbileBet]);
 
     return (
         <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="glass-ui-gold p-4 rounded-3xl flex flex-col gap-4 w-72 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/5"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="glass-ui-gold p-3 rounded-2xl flex flex-col gap-3 w-56 shadow-[0_20px_40px_rgba(0,0,0,0.6)] border border-white/5"
         >
-            <div className="flex items-center justify-between px-2 pt-1">
-               <span className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-black">Call Amount</span>
-               <span className="text-lg font-black text-poker-gold">${callAmount}</span>
-            </div>
+            {/* Betting Controls */}
+            {maxPossbileBet > callAmount && (
+              <BetSlider 
+                min={minRaiseTotal} 
+                max={maxPossbileBet} 
+                value={betAmount} 
+                onChange={setBetAmount}
+                pot={gameState.pot}
+              />
+            )}
+
+            <div className="h-[1px] bg-white/5 w-full -my-1" />
 
             <div className="flex flex-col gap-2">
               <div className="flex gap-2">
                 <button 
                     onClick={() => onAction('fold')}
-                    className="flex-1 bg-red-500/10 border border-red-500/20 text-red-500 font-black py-3 rounded-xl hover:bg-red-500 hover:text-white transition-all text-[10px] uppercase tracking-widest"
+                    className="flex-1 bg-red-500/10 border border-red-500/20 text-red-500 font-black py-2 rounded-lg hover:bg-red-500 hover:text-white transition-all text-[9px] uppercase tracking-wider"
                 >
                     Fold
                 </button>
                 <button 
                     onClick={() => onAction('check')}
-                    className="flex-1 bg-white/5 border border-white/10 text-white font-black py-3 rounded-xl hover:bg-white/10 transition-all text-[10px] uppercase tracking-widest"
+                    className="flex-1 bg-white/5 border border-white/10 text-white font-black py-2 rounded-lg hover:bg-white/10 transition-all text-[9px] uppercase tracking-wider disabled:opacity-20"
                     disabled={callAmount > 0}
-                    style={{ opacity: callAmount > 0 ? 0.3 : 1 }}
                 >
                     Check
                 </button>
               </div>
               
-              <button 
-                  onClick={() => onAction('call')}
-                  className="w-full bg-white text-slate-950 font-black py-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all text-[10px] uppercase tracking-[0.4em] shadow-xl"
-                  style={{ display: callAmount > 0 ? 'block' : 'none' }}
-              >
-                  Call ${callAmount}
-              </button>
+              {callAmount > 0 && (
+                <button 
+                    onClick={() => onAction('call')}
+                    className="w-full bg-white text-slate-950 font-black py-2.5 rounded-lg hover:brightness-110 active:scale-[0.98] transition-all text-[9px] uppercase tracking-[0.2em] shadow-lg"
+                >
+                    Call ${callAmount}
+                </button>
+              )}
 
               <button 
-                  onClick={() => onAction('raise', 50)}
-                  className="w-full btn-gold py-4 rounded-xl text-[10px] uppercase tracking-[0.3em] font-black"
+                  onClick={() => onAction('raise', betAmount - callAmount)}
+                  className="w-full btn-gold py-2.5 rounded-lg text-[9px] uppercase tracking-[0.2em] font-black group relative overflow-hidden"
               >
-                  {maxBet === 0 ? 'Bet' : 'Raise'}
+                  <span className="relative z-10">
+                    {maxBet === 0 ? `Bet $${betAmount}` : `Raise to $${betAmount}`}
+                  </span>
               </button>
             </div>
         </motion.div>
     );
 };
 
-const WinnerOverlay: React.FC<{ winner: any }> = ({ winner }) => {
-    return (
-        <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 backdrop-blur-md"
-        >
-            <motion.div
-                initial={{ scale: 0.8, y: 20, opacity: 0 }}
-                animate={{ scale: 1, y: 0, opacity: 1 }}
-                exit={{ scale: 1.1, opacity: 0 }}
-                className="glass-ui-luxury p-12 rounded-[4rem] text-center space-y-8 max-w-lg w-full relative overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.8)] border border-poker-gold/30"
-            >
-                {/* Background Shimmer */}
-                <div className="absolute inset-0 bg-gradient-to-br from-poker-gold/10 via-transparent to-poker-gold/5 pointer-events-none" />
-                
-                <div className="space-y-2 relative z-10">
-                    <motion.div
-                        animate={{ rotate: [0, -10, 10, -10, 0] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="inline-block"
-                    >
-                        <RefreshCw className="w-16 h-16 text-poker-gold mx-auto drop-shadow-[0_0_20px_rgba(212,175,55,0.4)]" />
-                    </motion.div>
-                    <h2 className="text-poker-gold text-sm uppercase tracking-[0.8em] font-black opacity-80 pt-4">Result Victory</h2>
-                    <h1 className="text-5xl font-black text-white tracking-tighter">{winner.name} Wins!</h1>
-                </div>
 
-                <div className="flex flex-col items-center gap-4 relative z-10">
-                    <div className="flex items-center gap-3 bg-black/40 px-8 py-4 rounded-3xl border border-white/5 shadow-inner">
-                        <Coins className="w-8 h-8 text-poker-gold" />
-                        <span className="text-5xl font-black text-white tracking-tighter tabular-nums">${winner.amount.toLocaleString()}</span>
-                    </div>
-                    <p className="text-poker-gold font-black uppercase tracking-[0.4em] text-xs pt-2">
-                        {winner.handName}
-                    </p>
-                </div>
-
-                {/* Winning Cards Display */}
-                <div className="flex justify-center gap-3 relative z-10 pt-4 scale-110">
-                    {winner.cards.map((card: string, idx: number) => (
-                        <motion.div
-                            key={idx}
-                            initial={{ y: 50, opacity: 0, rotate: -10 }}
-                            animate={{ y: 0, opacity: 1, rotate: (idx - 2) * 5 }}
-                            transition={{ delay: 0.2 + idx * 0.1, type: "spring", stiffness: 200 }}
-                        >
-                            <Card code={card} className="w-20 h-28" />
-                        </motion.div>
-                    ))}
-                </div>
-
-                <div className="pt-8 relative z-10">
-                    <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-poker-gold/20 to-transparent" />
-                    <p className="text-white/20 text-[10px] uppercase tracking-[0.3em] font-medium pt-4">Next hand starting shortly...</p>
-                </div>
-            </motion.div>
-        </motion.div>
-    );
-};
 
 export default App;
