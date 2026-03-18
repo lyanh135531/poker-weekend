@@ -19,6 +19,7 @@ export interface Player {
   cards: string[];
   isFolded: boolean;
   isTurn: boolean;
+  isAllIn: boolean;
   bet: number;
 }
 
@@ -47,4 +48,5 @@ export interface GameState {
     cards: string[];
   } | null;
   turnExpiresAt?: number; // timestamp in ms
+  creatorId: string;
 }

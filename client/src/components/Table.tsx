@@ -190,7 +190,7 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
                       </div>
                     )}
 
-                    {gameState.players.find(p => p.id === myId)?.isDealer && (
+                    {myId === gameState.creatorId && (
                       <div className="space-y-4">
                         <button 
                           onClick={() => onAction('start_game')}

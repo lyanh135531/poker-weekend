@@ -278,7 +278,15 @@ function App() {
         </div>
       </div>
 
-      <div className="absolute top-8 right-8 z-50">
+      <div className="absolute top-8 right-8 z-50 flex gap-4">
+        {me?.chips === 0 && (gameState.stage === GameStage.WAITING || gameState.stage === GameStage.SHOWDOWN) && (
+          <button 
+            onClick={() => socket?.emit('top_up', { roomId: gameState.roomId })}
+            className="flex items-center gap-2 px-6 py-3 rounded-full bg-poker-gold text-slate-950 hover:brightness-110 transition-all text-[10px] uppercase tracking-[0.3em] font-black shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+          >
+            Top Up
+          </button>
+        )}
         <button 
           onClick={handleLeave}
           className="flex items-center gap-2 px-6 py-3 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all text-[10px] uppercase tracking-[0.3em] font-black"

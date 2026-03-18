@@ -6,7 +6,7 @@ export class PokerEngine {
   private state: GameState;
   private deck: Deck;
 
-  constructor(roomId: string, config?: GameConfig) {
+  constructor(roomId: string, creatorId: string, config?: GameConfig) {
     this.deck = new Deck();
     const defaultConfig: GameConfig = {
       buyIn: 1000,
@@ -15,6 +15,7 @@ export class PokerEngine {
     };
     this.state = {
       roomId,
+      creatorId,
       config: config || defaultConfig,
       players: [],
       pot: 0,
@@ -42,6 +43,7 @@ export class PokerEngine {
       cards: [],
       isFolded: false,
       isTurn: false,
+      isAllIn: false,
       bet: 0,
       hasActed: false,
       isDealer: this.state.players.length === 0 // First player is dealer
@@ -49,6 +51,24 @@ export class PokerEngine {
     
     this.playerStats[name] = chips;
     return true;
+  }
+
+  handleBet(playerId: string, amount: number): number {
+    const player = this.state.players.find(p => p.id === playerId);
+    if (!player || player.isAllIn) return 0;
+
+    const actualAmount = Math.min(amount, player.chips);
+    player.chips -= actualAmount;
+    player.bet += actualAmount;
+    this.state.pot += actualAmount;
+    
+    if (player.chips === 0 && actualAmount > 0) {
+      player.isAllIn = true;
+    }
+
+    // Sync persistence
+    this.playerStats[player.name] = player.chips;
+    return actualAmount;
   }
 
   removePlayer(id: string) {
@@ -109,8 +129,18 @@ export class PokerEngine {
     this.updateTurns();
   }
 
-  startGame() {
-    if (this.state.players.length < 2) return false;
+  startGame(playerId: string) {
+    // Only creator can start
+    if (playerId !== this.state.creatorId) return false;
+    
+    // Only allow players with chips to play
+    const eligiblePlayers = this.state.players.filter(p => p.chips > 0 || p.isAllIn);
+    if (eligiblePlayers.length < 2) return false;
+
+    // Auto-fold/Spectator players with 0 chips
+    this.state.players.forEach(p => {
+      if (p.chips === 0) p.isFolded = true;
+    });
 
     this.deck.reset();
     this.deck.shuffle();
@@ -124,55 +154,50 @@ export class PokerEngine {
 
     // Deal hole cards & reset player state
     this.state.players.forEach(p => {
-      p.cards = this.deck.draw(2).map(c => `${c.rank}${c.suit}`);
-      p.isFolded = false;
-      p.bet = 0;
-      p.hasActed = false;
+      if (p.chips > 0) {
+        p.cards = this.deck.draw(2).map(c => `${c.rank}${c.suit}`);
+        p.isFolded = false;
+        p.isAllIn = false;
+        p.bet = 0;
+        p.hasActed = false;
+      } else {
+        p.cards = [];
+        p.isFolded = true;
+        p.isAllIn = false;
+      }
     });
 
     // Blinds logic
     const n = this.state.players.length;
-    let sbIndex, bbIndex, utgIndex;
+    let sbIndex = (this.state.dealerIndex + 1) % n;
+    let bbIndex = (this.state.dealerIndex + 2) % n;
+    let utgIndex = (this.state.dealerIndex + 3) % n;
 
     if (n === 2) {
-      // World Rules Heads-up: Dealer is SB, other is BB
       sbIndex = this.state.dealerIndex;
       bbIndex = (this.state.dealerIndex + 1) % n;
-      utgIndex = sbIndex; // SB (Dealer) acts first pre-flop
-    } else {
-      sbIndex = (this.state.dealerIndex + 1) % n;
-      bbIndex = (this.state.dealerIndex + 2) % n;
-      utgIndex = (this.state.dealerIndex + 3) % n;
+      utgIndex = sbIndex;
     }
     
     this.handleBet(this.state.players[sbIndex].id, this.state.config.smallBlind);
     this.handleBet(this.state.players[bbIndex].id, this.state.config.bigBlind);
 
-    // Pre-flop: the Big Blind is technically the last raiser (forced)
     this.state.lastRaiserIndex = bbIndex;
     this.state.currentTurnIndex = utgIndex;
     
-    this.resetTurnTimer();
-    this.updateTurns();
-    return true;
-  }
-
-  handleBet(playerId: string, amount: number) {
-    const player = this.state.players.find(p => p.id === playerId);
-    if (!player || player.chips < amount) return false;
-
-    player.chips -= amount;
-    player.bet += amount;
-    this.state.pot += amount;
-    
-    // Sync persistence
-    this.playerStats[player.name] = player.chips;
+    // Ensure we don't start turn on a folded/all-in player
+    if (this.state.players[this.state.currentTurnIndex].isFolded || this.state.players[this.state.currentTurnIndex].isAllIn) {
+      this.nextTurn();
+    } else {
+      this.resetTurnTimer();
+      this.updateTurns();
+    }
     return true;
   }
 
   action(playerId: string, type: 'fold' | 'call' | 'check' | 'raise', amount: number = 0) {
     const player = this.state.players[this.state.currentTurnIndex];
-    if (player.id !== playerId) return false;
+    if (player.id !== playerId || player.isAllIn) return false;
 
     const currentMaxBet = Math.max(...this.state.players.map(p => p.bet));
 
@@ -185,33 +210,36 @@ export class PokerEngine {
         this.handleBet(playerId, callAmount);
         break;
       case 'raise':
-        // World rules: Raise must be at least minRaise
         const raiseAmount = Math.max(amount, this.state.minRaise);
         
-        // Enforce Raise Limit if configured
         if (this.state.config.raiseLimit && this.state.config.raiseLimit > 0) {
           if (raiseAmount > this.state.config.raiseLimit) {
-            return false; // Exceeds limit
+            return false;
           }
         }
 
         const totalRaiseTo = currentMaxBet + raiseAmount;
         const addedChips = totalRaiseTo - player.bet;
-        if (this.handleBet(playerId, addedChips)) {
-            this.state.minRaise = Math.max(amount, this.state.minRaise);
-            this.state.lastRaiserIndex = this.state.currentTurnIndex;
-            // World Rule: Reset everyone else's hasActed on raise
+        
+        // If raising more than chips, it's just an all-in call/raise
+        const actualAdded = this.handleBet(playerId, addedChips);
+        
+        if (actualAdded > 0) {
+            // Only update minRaise if the raise was "full" (not just a partial all-in)
+            if (actualAdded === addedChips) {
+                this.state.minRaise = Math.max(amount, this.state.minRaise);
+                this.state.lastRaiserIndex = this.state.currentTurnIndex;
+            }
+            // World Rule: Reset everyone else's hasActed on full raise
             this.state.players.forEach((p, i) => {
-                if (i !== this.state.currentTurnIndex && !p.isFolded) {
+                if (i !== this.state.currentTurnIndex && !p.isFolded && !p.isAllIn) {
                     p.hasActed = false;
                 }
             });
-        } else {
-            return false; // Not enough chips
         }
         break;
       case 'check':
-        if (player.bet < currentMaxBet) return false; // Cannot check if there's a bet to call
+        if (player.bet < currentMaxBet) return false;
         break;
     }
 
@@ -229,25 +257,32 @@ export class PokerEngine {
   }
 
   private nextTurn() {
-    const activePlayers = this.state.players.filter(p => !p.isFolded);
+    const playersStillIn = this.state.players.filter(p => !p.isFolded);
+    const playersWhoCanAct = playersStillIn.filter(p => !p.isAllIn);
     
-    // Check if hand is over early (everyone folded but one)
-    if (activePlayers.length === 1) {
+    // Check if hand is over early
+    if (playersStillIn.length <= 1) {
         this.resolveWinner();
         return;
     }
 
     const currentMaxBet = Math.max(...this.state.players.map(p => p.bet));
-    const everyoneActed = activePlayers.every(p => p.hasActed);
-    const betsEqualized = activePlayers.every(p => p.bet === currentMaxBet);
+    const everyoneActed = playersStillIn.every(p => p.hasActed || p.isAllIn);
+    const betsEqualized = playersStillIn.every(p => p.bet === currentMaxBet || p.isAllIn);
 
     if (everyoneActed && betsEqualized) {
         this.nextStage();
+    } else if (playersWhoCanAct.length === 0) {
+        // Everyone is all-in but one person might be left? 
+        // Actually if bets are equalized we transition. 
+        // If one person is NOT all-in but everyone else is, that person must still act/match if needed.
+        this.nextStage();
     } else {
         this.state.currentTurnIndex = (this.state.currentTurnIndex + 1) % this.state.players.length;
-        if (this.state.players[this.state.currentTurnIndex].isFolded) {
+        const p = this.state.players[this.state.currentTurnIndex];
+        if (p.isFolded || p.isAllIn) {
             this.nextTurn();
-            return; // Important: nextTurn is recursive, we don't want to reset timer twice
+            return;
         }
     }
     this.resetTurnTimer();
@@ -255,13 +290,25 @@ export class PokerEngine {
   }
 
   private nextStage() {
-    // Reset bets and acting flags for next stage
     this.state.players.forEach(p => {
         p.bet = 0;
-        p.hasActed = false;
+        if (!p.isAllIn) p.hasActed = false;
     });
     this.state.minRaise = this.state.config.bigBlind;
     this.state.lastRaiserIndex = null;
+
+    // If everyone or all but one is all-in, skip to showdown
+    const activePlayers = this.state.players.filter(p => !p.isFolded);
+    const canAct = activePlayers.filter(p => !p.isAllIn);
+
+    if (canAct.length <= 1 && this.state.stage !== GameStage.PRE_FLOP) {
+      // Just deal the rest and showdown
+      while (this.state.stage !== GameStage.SHOWDOWN) {
+        this.dealNextCards();
+      }
+      this.resolveWinner();
+      return;
+    }
 
     switch (this.state.stage) {
       case GameStage.PRE_FLOP:
@@ -279,26 +326,35 @@ export class PokerEngine {
       case GameStage.RIVER:
         this.state.stage = GameStage.SHOWDOWN;
         this.resolveWinner();
-        return; // resolveWinner handles stage transition if needed
+        return;
     }
 
-    // Post-flop: Small Blind (first active player after dealer) starts
+    // Post-flop turn start logic
     const n = this.state.players.length;
-    let nextIndex;
+    let nextIndex = (this.state.dealerIndex + 1) % n;
     
-    if (n === 2) {
-        // Standard Heads-up Post-flop: Dealer acts LAST, BB acts FIRST.
-        // In our setup, Dealer is dealerIndex, BB is (dealerIndex + 1) % 2.
-        nextIndex = (this.state.dealerIndex + 1) % 2;
-    } else {
-        // Multi-player: Small Blind (Dealer + 1) acts first.
-        nextIndex = (this.state.dealerIndex + 1) % n;
-    }
-
-    while (this.state.players[nextIndex].isFolded) {
+    while (this.state.players[nextIndex].isFolded || this.state.players[nextIndex].isAllIn) {
         nextIndex = (nextIndex + 1) % n;
+        if (nextIndex === (this.state.dealerIndex + 1) % n) break; // Circular safety
     }
     this.state.currentTurnIndex = nextIndex;
+  }
+
+  private dealNextCards() {
+    switch (this.state.stage) {
+      case GameStage.PRE_FLOP:
+        this.state.communityCards = this.deck.draw(3).map(c => `${c.rank}${c.suit}`);
+        this.state.stage = GameStage.FLOP;
+        break;
+      case GameStage.FLOP:
+      case GameStage.TURN:
+        this.state.communityCards.push(...this.deck.draw(1).map(c => `${c.rank}${c.suit}`));
+        this.state.stage = this.state.stage === GameStage.FLOP ? GameStage.TURN : GameStage.RIVER;
+        break;
+      case GameStage.RIVER:
+        this.state.stage = GameStage.SHOWDOWN;
+        break;
+    }
   }
 
   resolveWinner() {
@@ -372,6 +428,21 @@ export class PokerEngine {
       p.isTurn = i === this.state.currentTurnIndex;
       p.isDealer = i === this.state.dealerIndex;
     });
+  }
+
+  topUp(playerId: string) {
+    const player = this.state.players.find(p => p.id === playerId);
+    if (!player) return false;
+
+    // Only allow if they have 0 chips and aren't blocking an active turn
+    if (player.chips === 0) {
+      player.chips = this.state.config.buyIn;
+      player.isAllIn = false;
+      this.playerStats[player.name] = player.chips;
+      this.updateTurns();
+      return true;
+    }
+    return false;
   }
 
   getState(): GameState {

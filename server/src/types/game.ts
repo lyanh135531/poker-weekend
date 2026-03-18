@@ -22,6 +22,7 @@ export interface Player {
   bet: number;
   hasActed: boolean;
   isDealer: boolean;
+  isAllIn: boolean;
 }
 
 export interface GameConfig {
@@ -49,4 +50,5 @@ export interface GameState {
     cards: string[];
   } | null;
   turnExpiresAt?: number; // timestamp in ms
+  creatorId: string;
 }

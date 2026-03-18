@@ -89,6 +89,12 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
         }}
       >
         <div className={`relative p-1 rounded-full transition-all duration-500 scale-110 ${player.isTurn ? 'animate-turn-glow' : ''}`}>
+          {/* All-in Badge */}
+          {player.isAllIn && (
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full z-[60] shadow-lg animate-bounce border border-white/20">
+              ALL-IN
+            </div>
+          )}
           {/* Avatar Circle */}
           <div className={`w-11 h-11 rounded-full border-2 border-white/10 overflow-hidden shadow-2xl relative bg-slate-900 ${isMe ? 'ring-2 ring-poker-gold ring-offset-4 ring-offset-slate-950' : ''}`}>
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 outline-none">
@@ -121,7 +127,7 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: "100%" }}
-              transition={{ duration: 15, ease: "linear" }}
+              transition={{ duration: 60, ease: "linear" }}
               className="h-[3px] bg-poker-gold absolute bottom-0 left-0 shadow-[0_0_10px_var(--poker-gold)]"
             />
           )}

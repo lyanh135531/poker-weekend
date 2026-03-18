@@ -38,9 +38,8 @@ async function loadGameState(roomId: string): Promise<PokerEngine | null> {
     const data = await redisClient.get(`room:${roomId}`);
     if (data) {
         const state = JSON.parse(data);
-        const engine = new PokerEngine(roomId);
+        const engine = new PokerEngine(roomId, state.creatorId || 'SYSTEM');
         // A real senior app would have an 'inflate' method to restore state properly
-        // For now, let's use the local memory as cache and redis as backup
         return engine;
     }
     return null;
@@ -59,7 +58,7 @@ async function startServer() {
             console.log(`Join Room Request: ${roomId} from ${name}`);
             socket.join(roomId);
             if (!engines[roomId]) {
-                engines[roomId] = new PokerEngine(roomId, config);
+                engines[roomId] = new PokerEngine(roomId, socket.id, config);
             }
             
             const engine = engines[roomId];
@@ -82,7 +81,7 @@ async function startServer() {
                 return socket.emit('error', 'Invalid room identifier');
             }
             const engine = engines[roomId];
-            if (engine && engine.startGame()) {
+            if (engine && engine.startGame(socket.id)) {
                 await saveGameState(roomId, engine);
                 io.to(roomId).emit('game_update', engine.getState());
             }
@@ -120,6 +119,21 @@ async function startServer() {
             }
         } catch (err) {
             console.error('Leave Room Error:', err);
+        }
+    });
+
+    socket.on('top_up', async (data) => {
+        try {
+            const { roomId } = data || {};
+            if (roomId && engines[roomId]) {
+                const engine = engines[roomId];
+                if (engine.topUp(socket.id)) {
+                    io.to(roomId).emit('game_update', engine.getState());
+                    await saveGameState(roomId, engine);
+                }
+            }
+        } catch (err) {
+            console.error('Top Up Error:', err);
         }
     });
 
