@@ -20,31 +20,42 @@ const Card: React.FC<CardProps> = ({ code, hidden }) => {
 
   return (
     <motion.div 
-        initial={{ y: -20, opacity: 0, scale: 0.8, rotateY: 90 }}
+        initial={{ y: -10, opacity: 0, scale: 0.95, rotateY: 90 }}
         animate={{ y: 0, opacity: 1, scale: 1, rotateY: 0 }}
-        className={`w-12 h-16 md:w-20 md:h-28 bg-white rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] flex flex-col justify-between p-2 md:p-3 border border-slate-200 card-shine overflow-hidden ${hidden ? 'bg-gradient-to-br from-poker-gold to-yellow-700 p-1' : ''}`}
+        className={`relative w-10 h-14 md:w-14 md:h-20 rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.5)] flex flex-col justify-between overflow-hidden ${hidden ? 'bg-slate-900' : 'bg-white'}`}
     >
         {!hidden ? (
-            <>
-                <div className={`text-xs md:text-xl font-black leading-none ${isRed ? 'text-red-600' : 'text-slate-900'}`}>
-                    {rank}
-                </div>
-                <div className={`text-xl md:text-4xl self-center drop-shadow-sm ${isRed ? 'text-red-600' : 'text-slate-900'}`}>
-                    {suitIcons[suit]}
-                </div>
-                <div className={`text-xs md:text-xl font-black leading-none self-end rotate-180 ${isRed ? 'text-red-600' : 'text-slate-900'}`}>
-                    {rank}
+            <div className="w-full h-full p-1 relative">
+                {/* Subtle Inner Frame */}
+                <div className="absolute inset-[3px] border border-slate-100 rounded-sm pointer-events-none" />
+                
+                {/* Top Left Index */}
+                <div className={`absolute top-1.5 left-1.5 flex flex-col items-center leading-none ${isRed ? 'text-red-600' : 'text-slate-900'}`}>
+                    <span className="text-[10px] md:text-xs font-black tracking-tighter mb-0.5">{rank}</span>
+                    <span className="text-[8px] md:text-[10px]">{suitIcons[suit]}</span>
                 </div>
                 
-                {/* Subtle card texture */}
+                {/* Center Symbol */}
+                <div className={`absolute inset-0 flex items-center justify-center ${isRed ? 'text-red-500' : 'text-slate-900'} opacity-90`}>
+                    <span className="text-xl md:text-3xl drop-shadow-sm">{suitIcons[suit]}</span>
+                </div>
+                
+                {/* Bottom Right Index */}
+                <div className={`absolute bottom-1.5 right-1.5 flex flex-col items-center leading-none rotate-180 ${isRed ? 'text-red-600' : 'text-slate-900'}`}>
+                    <span className="text-[10px] md:text-xs font-black tracking-tighter mb-0.5">{rank}</span>
+                    <span className="text-[8px] md:text-[10px]">{suitIcons[suit]}</span>
+                </div>
+
+                {/* Professional Card Texture */}
                 <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/linen-paper.png')]"></div>
-            </>
+            </div>
         ) : (
-            <div className="w-full h-full bg-slate-900 rounded-lg border border-white/20 flex items-center justify-center relative overflow-hidden shadow-inner">
-                {/* Intricate Back Pattern */}
-                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--poker-gold)_1px,_transparent_1px)] bg-[length:6px_6px]"></div>
-                <div className="w-8 h-8 md:w-12 md:h-12 rounded-full border border-poker-gold/30 flex items-center justify-center">
-                    <div className="w-5 h-5 md:w-8 md:h-8 rounded-full bg-poker-gold/10 animate-pulse"></div>
+            <div className="w-full h-full rounded-[4px] border border-poker-gold/30 p-1 flex items-center justify-center relative overflow-hidden bg-slate-950">
+                {/* Minimalist Geometric Pattern */}
+                <div className="absolute inset-0 opacity-20 bg-[linear-gradient(45deg,transparent_25%,rgba(195,163,91,0.2)_25%,rgba(195,163,91,0.2)_50%,transparent_50%,transparent_75%,rgba(195,163,91,0.2)_75%,rgba(195,163,91,0.2)_100%)] bg-[length:4px_4px]"></div>
+                
+                <div className="z-10 w-full h-full border border-poker-gold/10 rounded-[2px] flex items-center justify-center">
+                   <div className="w-2 h-2 md:w-3 md:h-3 rounded-sm bg-poker-gold/20 rotate-45 border border-poker-gold/40 shadow-[0_0_10px_rgba(195,163,91,0.2)]"></div>
                 </div>
             </div>
         )}

@@ -102,12 +102,12 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
                         </div>
                         
                         <div className="flex flex-col items-start leading-tight">
-                          <span className="text-[10px] font-black text-poker-gold/60 uppercase tracking-[0.3em] mb-0.5">
+                          <span className="text-[8px] font-black text-poker-gold/40 uppercase tracking-[0.4em] mb-0.5">
                             {gameState.stage === 'SHOWDOWN' ? 'Winner' : 'Total Pot'}
                           </span>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-poker-gold text-lg font-black">$</span>
-                            <span className="text-3xl font-black text-white tabular-nums tracking-tighter drop-shadow-xl">
+                          <div className="flex items-center gap-1">
+                            <span className="text-poker-gold text-sm font-black opacity-40">$</span>
+                            <span className="text-2xl font-black text-white tabular-nums tracking-tighter drop-shadow-lg">
                               {gameState.stage === 'SHOWDOWN' && gameState.lastWinner ? gameState.lastWinner.amount.toLocaleString() : gameState.pot.toLocaleString()}
                             </span>
                           </div>
@@ -127,7 +127,7 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
             {/* Integrated Waiting / Showdown Control Zone */}
             <AnimatePresence>
               {(gameState.stage === 'WAITING' || gameState.stage === 'SHOWDOWN') && (
-                <div className={`absolute inset-0 flex items-center justify-center z-20 transition-all duration-700 ${gameState.stage === 'SHOWDOWN' ? '-translate-y-24' : ''}`}>
+                <div className={`absolute inset-0 flex items-center justify-center z-20 transition-all duration-700 ${gameState.stage === 'SHOWDOWN' ? '-translate-y-40' : ''}`}>
                   <motion.div 
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -143,68 +143,69 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
                           </div>
                         </div>
 
-                        <div className="space-y-4">
-                          <div className="space-y-1">
-                            <h2 className="text-poker-gold text-[10px] uppercase tracking-[0.5em] font-black opacity-60">
-                              Waiting for Players
+                        <div className="space-y-3">
+                          <div className="space-y-0.5">
+                            <h2 className="text-poker-gold text-[8px] uppercase tracking-[0.4em] font-black opacity-50">
+                              Awaiting Athletes
                             </h2>
-                            <div className="flex items-center justify-center gap-2 text-white/40">
-                               <span className="text-[8px] uppercase tracking-widest font-black">Room ID:</span>
-                               <span className="text-[10px] font-mono font-black text-poker-gold tracking-widest uppercase">{gameState.roomId}</span>
+                            <div className="flex items-center justify-center gap-1.5 text-white/30">
+                               <span className="text-[7px] uppercase tracking-widest font-black">Room:</span>
+                               <span className="text-[9px] font-mono font-black text-poker-gold/60 tracking-widest uppercase">{gameState.roomId}</span>
                             </div>
                           </div>
                           
                           <div className="flex flex-col items-center">
-                            <p className="text-white text-5xl font-black tracking-tighter">
+                            <p className="text-white text-4xl font-black tracking-tighter opacity-80">
                               {gameState.players.length}
                             </p>
-                            <p className="text-poker-gold/40 text-[10px] uppercase tracking-widest font-black">
-                              Athletes Seated
+                            <p className="text-poker-gold/30 text-[8px] uppercase tracking-[0.2em] font-black">
+                              Seated
                             </p>
                           </div>
                         </div>
                       </>
-                    ) : (
-                      <div className="space-y-4">
-                         <div className="relative w-16 h-16 mx-auto">
-                            <motion.div
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                              className="absolute inset-0 border-2 border-dashed border-poker-gold/20 rounded-full"
-                            />
-                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                               <RefreshCw className="w-6 h-6 text-poker-gold/60" />
-                            </div>
-                         </div>
-                         <div className="space-y-1">
-                            <h2 className="text-poker-gold text-[10px] uppercase tracking-[0.5em] font-black opacity-80">
-                               Hand Concluded
+                     ) : (
+                      <div className="flex flex-col items-center gap-1 mt-4">
+                         <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex flex-col items-center"
+                         >
+                            <span className="text-poker-gold/40 text-[7px] uppercase tracking-[0.4em] font-black mb-1">
+                               Victory
+                            </span>
+                            <h2 className="text-white text-3xl md:text-4xl font-black tracking-tighter uppercase italic drop-shadow-2xl">
+                               {gameState.lastWinner?.name}
                             </h2>
-                            <p className="text-white text-2xl font-black tracking-tighter uppercase italic">
-                               {gameState.lastWinner?.name} Wins
-                            </p>
-                            <p className="text-poker-gold/60 text-[9px] uppercase tracking-widest font-black">
-                               {gameState.lastWinner?.handName}
-                            </p>
-                         </div>
+                            <div className="flex items-center gap-2 mt-1">
+                               <div className="h-px w-4 bg-poker-gold/20" />
+                               <span className="text-poker-gold text-[10px] uppercase tracking-[0.2em] font-bold">
+                                  {gameState.lastWinner?.handName}
+                               </span>
+                               <div className="h-px w-4 bg-poker-gold/20" />
+                            </div>
+                         </motion.div>
                       </div>
                     )}
 
                     {myId === gameState.creatorId && (
-                      <div className="space-y-4">
+                      <div className="mt-6 flex flex-col items-center">
                         <button 
                           onClick={() => onAction('start_game')}
                           disabled={gameState.players.length < 2}
-                          className="btn-gold px-12 py-5 rounded-2xl flex items-center gap-3 group shadow-[0_20px_50px_rgba(212,175,55,0.2)] hover:shadow-[0_25px_60px_rgba(212,175,55,0.3)] border border-poker-gold/30 disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed transition-all"
+                          className="group relative flex items-center justify-center p-0.5 rounded-full overflow-hidden transition-all active:scale-95 disabled:opacity-20"
                         >
-                          <Play className="w-5 h-5 fill-current" />
-                          <span className="text-xs font-black uppercase tracking-[0.2em]">
-                            {gameState.stage === 'SHOWDOWN' ? 'Next Hand' : 'Initiate Hand'}
-                          </span>
+                          <div className="absolute inset-0 bg-gradient-to-tr from-poker-gold to-yellow-600 opacity-80 group-hover:opacity-100 transition-opacity" />
+                          <div className="relative bg-slate-950 px-5 py-2 rounded-full flex items-center gap-2 border border-white/5">
+                            <Play className="w-3 h-3 text-poker-gold fill-current" />
+                            <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.2em]">
+                              {gameState.stage === 'SHOWDOWN' ? 'Next' : 'Start'}
+                            </span>
+                          </div>
                         </button>
                         {gameState.stage === 'WAITING' && gameState.players.length < 2 && (
-                          <p className="text-[8px] text-poker-gold/40 uppercase tracking-[0.3em] font-black animate-pulse">
-                            Awaiting a competitor to begin
+                          <p className="text-[7px] text-poker-gold/30 uppercase tracking-[0.2em] font-black animate-pulse">
+                            Awaiting Competitor
                           </p>
                         )}
                       </div>
@@ -216,14 +217,18 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
 
 
             {/* Community Card Sockets - Dead Center Focus */}
-            <div className="absolute top-[50%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-4">
+            <div className="absolute top-[50%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-2">
                {[0, 1, 2, 3, 4].map(idx => (
                  <div key={idx} className="card-socket relative flex items-center justify-center">
                     <AnimatePresence mode="popLayout">
                         {gameState.communityCards[idx] && (
                           <motion.div
                             initial={{ scale: 0.8, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            animate={{ 
+                              scale: 1, 
+                              opacity: 1, 
+                              y: gameState.lastWinner?.cards.includes(gameState.communityCards[idx]) ? -15 : 0 
+                            }}
                             className="absolute inset-0"
                           >
                             <Card code={gameState.communityCards[idx]} />
@@ -248,6 +253,8 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
             totalSeats={10}
             isMe={player.id === myId}
             isDealer={player.isDealer}
+            stage={gameState.stage}
+            winningCards={gameState.lastWinner?.cards}
           />
         ))}
       </div>

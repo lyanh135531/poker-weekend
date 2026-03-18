@@ -22,6 +22,8 @@ function App() {
   const [smallBlind, setSmallBlind] = useState(10);
   const [bigBlind, setBigBlind] = useState(20);
   const [raiseLimit, setRaiseLimit] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const newSocket = io(SERVER_URL);
@@ -29,6 +31,12 @@ function App() {
 
     newSocket.on('game_update', (state: GameState) => {
       setGameState(state);
+      setError(null);
+    });
+    
+    newSocket.on('error', (msg: string) => {
+      setError(msg);
+      setJoined(false);
     });
 
     return () => {
@@ -71,31 +79,40 @@ function App() {
     }
   };
 
+  const copyRoomId = () => {
+    if (gameState?.roomId) {
+      navigator.clipboard.writeText(gameState.roomId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   if (!joined || !gameState) {
     return (
       <div className="layout-container h-screen bg-slate-950">
         <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
+          layout
+          initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="glass-ui-gold p-12 rounded-[3.5rem] w-full max-w-lg space-y-12"
+          className="glass-ui-gold p-8 rounded-[2rem] w-full max-w-md space-y-8"
         >
-          <div className="text-center space-y-3">
-            <h1 className="text-7xl font-black tracking-tighter text-white">
+          <div className="text-center space-y-2">
+            <h1 className="text-5xl font-black tracking-tighter text-white">
               POKER<span className="text-poker-gold">WKD</span>
             </h1>
-            <div className="flex items-center justify-center gap-4">
-               <div className="h-[1px] w-8 bg-poker-gold/40" />
-               <p className="text-poker-gold text-[10px] uppercase tracking-[0.5em] font-black">
+            <div className="flex items-center justify-center gap-3">
+               <div className="h-[1px] w-6 bg-poker-gold/30" />
+               <p className="text-poker-gold text-[8px] uppercase tracking-[0.6em] font-black opacity-60">
                  Elite Series
                </p>
-               <div className="h-[1px] w-8 bg-poker-gold/40" />
+               <div className="h-[1px] w-6 bg-poker-gold/30" />
             </div>
           </div>
 
-          <div className="flex bg-white/5 p-1.5 rounded-2xl gap-2">
+          <div className="flex bg-white/5 p-1 rounded-xl gap-1.5">
             <button 
               onClick={() => setMode('join')}
-              className={`flex-1 py-3 px-4 rounded-xl text-[10px] uppercase tracking-[0.2em] font-black transition-all ${mode === 'join' ? 'bg-poker-gold text-slate-950 shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+              className={`flex-1 py-2 px-3 rounded-lg text-[9px] uppercase tracking-[0.2em] font-black transition-all ${mode === 'join' ? 'bg-poker-gold text-slate-950 shadow-md' : 'text-white/30 hover:text-white hover:bg-white/5'}`}
             >
               Join Table
             </button>
@@ -104,69 +121,75 @@ function App() {
                 setMode('create');
                 generateRoomId();
               }}
-              className={`flex-1 py-3 px-4 rounded-xl text-[10px] uppercase tracking-[0.2em] font-black transition-all ${mode === 'create' ? 'bg-poker-gold text-slate-950 shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+              className={`flex-1 py-2 px-3 rounded-lg text-[9px] uppercase tracking-[0.2em] font-black transition-all ${mode === 'create' ? 'bg-poker-gold text-slate-950 shadow-md' : 'text-white/30 hover:text-white hover:bg-white/5'}`}
             >
               Create Table
             </button>
           </div>
 
-          <form onSubmit={mode === 'join' ? handleJoin : handleCreate} className="space-y-8">
-            <div className="space-y-6">
-              <div className="space-y-3">
-                <label className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-white/40 font-black ml-2">
-                  <User className="w-3 h-3 text-poker-gold" />
-                  Player Identity
+          <motion.form layout onSubmit={mode === 'join' ? handleJoin : handleCreate} className="space-y-8">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-[8px] uppercase tracking-[0.3em] text-white/30 font-black ml-1">
+                  <User className="w-2.5 h-2.5 text-poker-gold/60" />
+                  Identity
                 </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="E.g. Phil Ivey"
+                  placeholder="E.g. Lian"
                   className="input-premium"
                   required
                 />
               </div>
 
-              <div className="space-y-3">
-                <label className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-white/40 font-black ml-2">
-                  <Users className="w-3 h-3 text-poker-gold" />
-                  Table Reference
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-[8px] uppercase tracking-[0.3em] text-white/30 font-black ml-1">
+                  <Users className="w-2.5 h-2.5 text-poker-gold/60" />
+                  Reference
                 </label>
-                <div className="flex gap-3 h-[68px]">
+                <div className="flex gap-2 h-[52px]">
                   <input
                     type="text"
                     value={roomId}
                     onChange={(e) => setRoomId(e.target.value.toUpperCase())}
-                    placeholder="ROOM-ID"
+                    placeholder="ROOM ID"
                     className="input-premium flex-1 font-mono uppercase tracking-widest text-center"
                     required
                     readOnly={mode === 'create'}
                   />
-                  {mode === 'join' && (
-                    <button
-                      type="button"
-                      onClick={generateRoomId}
-                      className="btn-outline aspect-square p-0 flex items-center justify-center"
-                      title="Generate ID"
-                    >
-                      <RefreshCw className="w-5 h-5 text-poker-gold" />
-                    </button>
-                  )}
+                  <AnimatePresence>
+                    {mode === 'create' && (
+                      <motion.button
+                        layout
+                        initial={{ opacity: 0, scale: 0.8, width: 0 }}
+                        animate={{ opacity: 1, scale: 1, width: 'auto' }}
+                        exit={{ opacity: 0, scale: 0.8, width: 0 }}
+                        type="button"
+                        onClick={generateRoomId}
+                        className="btn-outline aspect-square p-0 flex items-center justify-center overflow-hidden"
+                        title="Generate ID"
+                      >
+                        <RefreshCw className="w-5 h-5 text-poker-gold" />
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
 
-              {mode === 'create' && (
-                <div className="space-y-4 pt-2">
+              <div className="pt-2">
+                <div className={mode === 'create' ? "space-y-4" : "space-y-4 opacity-0 pointer-events-none select-none"}>
                   <button 
                     type="button"
-                    onClick={() => setShowAdvanced(!showAdvanced)}
-                    className="text-[10px] uppercase tracking-[0.2em] text-poker-gold font-black flex items-center gap-2 hover:opacity-80 transition-all ml-2"
+                    onClick={() => mode === 'create' && setShowAdvanced(!showAdvanced)}
+                    className="text-[10px] uppercase tracking-[0.2em] text-poker-gold/80 font-black flex items-center gap-2 hover:text-poker-gold transition-all py-1"
                   >
-                    {showAdvanced ? '− Hide Advanced Config' : '+ Show Advanced Config'}
+                    {showAdvanced && mode === 'create' ? '− Hide Settings' : '+ Advanced Settings'}
                   </button>
 
                   <AnimatePresence>
-                    {showAdvanced && (
+                    {showAdvanced && mode === 'create' && (
                       <motion.div 
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
@@ -213,17 +236,30 @@ function App() {
                     )}
                   </AnimatePresence>
                 </div>
-              )}
+              </div>
             </div>
+
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] p-3 rounded-lg text-center font-bold overflow-hidden mt-4"
+                >
+                  {error}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <button 
               type="submit" 
               disabled={!socket?.connected}
-              className="btn-gold w-full text-sm font-black pt-6 pb-6 disabled:opacity-50 disabled:grayscale transition-all"
+              className="btn-gold w-full text-[11px] font-black py-4 disabled:opacity-50 disabled:grayscale transition-all shadow-xl"
             >
               {joined && !gameState ? 'Syncing...' : mode === 'join' ? 'Enter Arena' : 'Initialize Table'}
             </button>
-          </form>
+          </motion.form>
           
           <div className="text-center">
             <p className="text-[10px] text-white/20 uppercase tracking-[0.3em] font-medium">
@@ -272,26 +308,55 @@ function App() {
 
       {/* Floating UI Elements */}
       <div className="absolute top-8 left-8 z-50">
-        <div className="glass-ui-gold px-6 py-3 rounded-full flex flex-col items-center justify-center border border-poker-gold/20 shadow-[0_0_30px_rgba(212,175,55,0.1)]">
-           <span className="text-[8px] uppercase tracking-[0.4em] text-poker-gold/60 font-black mb-0.5 ml-1">Table Ref</span>
-           <span className="text-sm font-black text-white tracking-widest font-mono uppercase">{gameState.roomId}</span>
-        </div>
+        <motion.div 
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={copyRoomId}
+          className="glass-ui-gold px-4 py-2 rounded-full flex flex-col items-center justify-center border border-poker-gold/10 shadow-[0_0_20px_rgba(0,0,0,0.4)] cursor-pointer group relative overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-poker-gold/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+          
+          <AnimatePresence mode="wait">
+            {copied ? (
+              <motion.span 
+                key="copied"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="text-[8px] uppercase tracking-[0.2em] text-poker-gold font-black py-1.5"
+              >
+                Copied!
+              </motion.span>
+            ) : (
+              <motion.div 
+                key="id"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="flex flex-col items-center"
+              >
+                <span className="text-[7px] uppercase tracking-[0.3em] text-poker-gold/50 font-black mb-0.5 ml-0.5">Reference</span>
+                <span className="text-[11px] font-black text-white/80 tracking-widest font-mono uppercase">{gameState.roomId}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </div>
 
       <div className="absolute top-8 right-8 z-50 flex gap-4">
         {me?.chips === 0 && (gameState.stage === GameStage.WAITING || gameState.stage === GameStage.SHOWDOWN) && (
           <button 
             onClick={() => socket?.emit('top_up', { roomId: gameState.roomId })}
-            className="flex items-center gap-2 px-6 py-3 rounded-full bg-poker-gold text-slate-950 hover:brightness-110 transition-all text-[10px] uppercase tracking-[0.3em] font-black shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-poker-gold text-slate-950 hover:brightness-105 transition-all text-[9px] uppercase tracking-[0.2em] font-black shadow-lg"
           >
             Top Up
           </button>
         )}
         <button 
           onClick={handleLeave}
-          className="flex items-center gap-2 px-6 py-3 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all text-[10px] uppercase tracking-[0.3em] font-black"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/5 border border-white/5 text-white/40 hover:bg-red-500/10 hover:text-red-500 transition-all text-[9px] uppercase tracking-[0.2em] font-black"
         >
-          Leave Table
+          Leave
         </button>
       </div>
 
@@ -408,12 +473,12 @@ const ActionBar = ({ player, gameState, onAction }: { player: any, gameState: an
 
     return (
         <motion.div 
-            initial={{ y: 20, opacity: 0 }}
+            initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="glass-ui-gold p-3 rounded-2xl flex flex-col gap-3 w-56 shadow-[0_20px_40px_rgba(0,0,0,0.6)] border border-white/5"
+            className="glass-ui-gold p-2.5 rounded-xl flex flex-col gap-2.5 w-48 shadow-[0_15px_30px_rgba(0,0,0,0.5)] border border-white/5"
         >
             <div className="flex justify-between items-center px-1">
-              <span className="text-[10px] text-white/40 uppercase font-black">Your Action</span>
+              <span className="text-[8px] text-white/30 uppercase font-black tracking-widest">Action Required</span>
               {gameState.turnExpiresAt && <Timer expiresAt={gameState.turnExpiresAt} />}
             </div>
             {/* Betting Controls */}

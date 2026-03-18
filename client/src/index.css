@@ -9,12 +9,12 @@
   --poker-green-dark: #0d2415;
   --surface-dark: #05070a;
 
-  /* Responsive Design Tokens - Tuned for fluid scaling */
-  --table-width: clamp(280px, 85vw, 1100px);
-  --table-height: clamp(240px, 60vh, 600px); /* Slightly increased min-height for better mobile vertical space */
-  --player-plate-width: clamp(80px, 12vw, 130px); /* Narrowed further as requested */
-  --card-width: clamp(30px, 5vw, 65px); /* Scaled down min-width for mobile */
-  --bet-badge-offset: clamp(25%, 5vh, 40%);
+  /* Responsive Design Tokens - Ultra-refined for minimalist aesthetic */
+  --table-width: clamp(280px, 85vw, 1000px);
+  --table-height: clamp(240px, 60vh, 550px);
+  --player-plate-width: clamp(75px, 10vw, 115px);
+  --card-width: clamp(28px, 4.5vw, 60px);
+  --bet-badge-offset: clamp(20%, 4.5vh, 35%);
 }
 
 @layer base {
@@ -50,25 +50,25 @@
     @apply backdrop-blur-3xl bg-slate-950/60 border border-poker-gold/20 shadow-[0_0_50px_rgba(0,0,0,0.8)];
   }
 
-  /* Professional Components */
+  /* Professional Components - Minimized */
   .input-premium {
-    @apply w-full bg-slate-950/80 border-2 border-white/5 rounded-2xl px-6 py-4 focus:border-poker-gold/50 focus:bg-slate-900 outline-none transition-all text-white placeholder:text-slate-700 text-lg font-bold;
+    @apply w-full bg-slate-950/80 border border-white/5 rounded-xl px-4 py-3 focus:border-poker-gold/40 focus:bg-slate-900 outline-none transition-all text-white placeholder:text-slate-800 text-sm font-medium tracking-tight;
   }
 
   .input-premium-small {
-    @apply w-full bg-slate-950/80 border border-white/10 rounded-xl px-4 py-2.5 focus:border-poker-gold/50 focus:bg-slate-900 outline-none transition-all text-white placeholder:text-slate-700 text-sm font-bold;
+    @apply w-full bg-slate-950/80 border border-white/5 rounded-lg px-3 py-2 focus:border-poker-gold/40 focus:bg-slate-900 outline-none transition-all text-white placeholder:text-slate-800 text-[11px] font-medium tracking-tight;
   }
 
   .btn-premium {
-    @apply px-8 py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all active:scale-95 shadow-xl;
+    @apply px-6 py-3 rounded-xl font-black text-[11px] uppercase tracking-[0.25em] transition-all active:scale-95 shadow-lg;
   }
 
   .btn-gold {
-    @apply btn-premium bg-poker-gold text-poker-green-dark hover:brightness-110 shadow-poker-gold/20;
+    @apply btn-premium bg-poker-gold text-slate-950 hover:brightness-105 shadow-poker-gold/10;
   }
 
   .btn-outline {
-    @apply btn-premium border-2 border-white/5 text-white hover:bg-white/5;
+    @apply btn-premium border border-white/5 text-white/60 hover:text-white hover:bg-white/5;
   }
 }
 
@@ -121,7 +121,7 @@
   }
 
   .card-socket {
-    @apply w-12 h-16 md:w-20 md:h-28 rounded-xl border border-white/5 bg-black/10;
+    @apply w-10 h-14 md:w-14 md:h-20 rounded-md border border-white/5 bg-black/10;
   }
   
   .animate-spin-slow {
@@ -134,7 +134,7 @@
   }
 }
 
-/* Card Shine Effect */
+/* Card Shine Effect - Subtle */
 .card-shine {
   position: relative;
   overflow: hidden;
@@ -162,8 +162,8 @@
 }
 
 @keyframes pulse-turn {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(195, 163, 91, 0.4); border-color: rgba(195, 163, 91, 0.6); }
-  50% { box-shadow: 0 0 40px 6px rgba(195, 163, 91, 0.2); border-color: rgba(195, 163, 91, 1); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(195, 163, 91, 0.2); border-color: rgba(195, 163, 91, 0.4); }
+  50% { box-shadow: 0 0 25px 2px rgba(195, 163, 91, 0.15); border-color: rgba(195, 163, 91, 0.8); }
 }
 
 .animate-turn-glow {

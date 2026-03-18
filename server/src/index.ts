@@ -62,8 +62,12 @@ async function startServer() {
                 const savedEngine = await loadGameState(roomId);
                 if (savedEngine) {
                     engines[roomId] = savedEngine;
-                } else {
+                } else if (config) {
+                    // Only create new engine if config is provided (Create mode)
                     engines[roomId] = new PokerEngine(roomId, socket.id, config);
+                } else {
+                    // If no config and no saved engine, the room doesn't exist
+                    return socket.emit('error', 'Room does not exist. Please create it first.');
                 }
             }
             

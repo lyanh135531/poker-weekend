@@ -378,9 +378,7 @@ export class PokerEngine {
         evaluations.sort((a, b) => b.eval.score - a.eval.score);
         winner = evaluations[0].player;
         handName = evaluations[0].eval.name;
-        // The simplified evaluator doesn't return the best 5-card hand specifically,
-        // so we'll just show the player's hole cards for now.
-        winningCards = winner.cards;
+        winningCards = evaluations[0].eval.cards;
     }
     
     const potWon = this.state.pot;
