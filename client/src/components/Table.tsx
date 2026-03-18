@@ -57,21 +57,29 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(41,120,60,0.4)_0%,_transparent_70%)] opacity-60" />
             
             {/* Total Pot - Luxury Floating Badge */}
-            <AnimatePresence>
+                    <AnimatePresence>
               {gameState.stage !== 'WAITING' && (
                 <div className="absolute top-[20%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 transition-all duration-1000"
                   style={gameState.stage === 'SHOWDOWN' && gameState.lastWinner ? {
                     top: (() => {
                       const winner = playersWithSeats.find(p => p.name === gameState.lastWinner?.name);
                       if (!winner) return '20%';
-                      const angle = (winner.seatIndex / 10) * 2 * Math.PI + Math.PI / 2;
-                      return `${50 + 35 * Math.sin(angle)}%`;
+                      const SEAT_MAP: Record<number, { left: number; top: number }> = {
+                        0: { left: 50, top: 100 }, 1: { left: 85, top: 95 }, 2: { left: 100, top: 70 },
+                        3: { left: 100, top: 30 }, 4: { left: 85, top: 5 }, 5: { left: 50, top: 0 },
+                        6: { left: 15, top: 5 }, 7: { left: 0, top: 30 }, 8: { left: 0, top: 70 }, 9: { left: 15, top: 95 }
+                      };
+                      return `${SEAT_MAP[winner.seatIndex]?.top || 50}%`;
                     })(),
                     left: (() => {
                       const winner = playersWithSeats.find(p => p.name === gameState.lastWinner?.name);
                       if (!winner) return '50%';
-                      const angle = (winner.seatIndex / 10) * 2 * Math.PI + Math.PI / 2;
-                      return `${50 + 40 * Math.cos(angle)}%`;
+                      const SEAT_MAP: Record<number, { left: number; top: number }> = {
+                        0: { left: 50, top: 100 }, 1: { left: 85, top: 95 }, 2: { left: 100, top: 70 },
+                        3: { left: 100, top: 30 }, 4: { left: 85, top: 5 }, 5: { left: 50, top: 0 },
+                        6: { left: 15, top: 5 }, 7: { left: 0, top: 30 }, 8: { left: 0, top: 70 }, 9: { left: 15, top: 95 }
+                      };
+                      return `${SEAT_MAP[winner.seatIndex]?.left || 50}%`;
                     })(),
                     scale: 0.6,
                     opacity: 0
@@ -217,8 +225,7 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
             </AnimatePresence>
 
 
-            {/* Community Card Sockets - Dead Center Focus */}
-            <div className="absolute top-[50%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-2">
+             <div className="absolute top-[50%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-2">
                {[0, 1, 2, 3, 4].map(idx => (
                  <div key={idx} className="card-socket relative flex items-center justify-center">
                     <AnimatePresence mode="popLayout">
@@ -242,23 +249,23 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
 
           </div>
         </div>
-      </div>
 
-      {/* 2. Responsive Player Layer - Fixed Slot System */}
-      <div className="absolute inset-0 z-30 pointer-events-none">
-        {playersWithSeats.map((player) => (
-          <Player 
-            key={player.id} 
-            player={player} 
-            seatIndex={player.seatIndex} 
-            totalSeats={10}
-            isMe={player.id === myId}
-            isDealer={player.isDealer}
-            stage={gameState.stage}
-            winningCards={gameState.lastWinner?.cards}
-            isFoldVictory={gameState.lastWinner?.handName === 'Fold Victory'}
-          />
-        ))}
+        {/* 2. Responsive Player Layer - Fixed Slot System (Now Anchored to Table HTML Edge) */}
+        <div className="absolute inset-x-0 inset-y-0 z-30 pointer-events-none">
+          {playersWithSeats.map((player) => (
+            <Player 
+              key={player.id} 
+              player={player} 
+              seatIndex={player.seatIndex} 
+              totalSeats={10}
+              isMe={player.id === myId}
+              isDealer={player.isDealer}
+              stage={gameState.stage}
+              winningCards={gameState.lastWinner?.cards}
+              isFoldVictory={gameState.lastWinner?.handName === 'Fold Victory'}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

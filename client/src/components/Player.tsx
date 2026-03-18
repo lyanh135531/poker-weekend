@@ -16,31 +16,40 @@ interface PlayerProps {
 }
 
 const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, isDealer, stage, winningCards, isFoldVictory }) => {
-  // Elliptical distribution for seating - fixed 10-slot slot system
-  const angle = (seatIndex / totalSeats) * 2 * Math.PI + Math.PI / 2;
-  const xRadius = 28; // percentage (decreased to bring side players closer)
-  const yRadius = 35; // percentage
+  // Fixed HTML Edge mapping ([left%, top%])
+  // Traces the exact perimeter of the CSS Table Base
+  const SEAT_MAP: Record<number, { left: number; top: number }> = {
+    0: { left: 50, top: 100 }, // Hero (Bottom Center)
+    1: { left: 85, top: 95 },  // Bottom Right
+    2: { left: 100, top: 70 }, // Right Bottom
+    3: { left: 100, top: 30 }, // Right Top 
+    4: { left: 85, top: 5 },   // Top Right
+    5: { left: 50, top: 0 },   // Top Center (Dealer/Reserved)
+    6: { left: 15, top: 5 },   // Top Left
+    7: { left: 0, top: 30 },   // Left Top
+    8: { left: 0, top: 70 },   // Left Bottom
+    9: { left: 15, top: 95 },  // Bottom Left
+  };
 
-  // Push corners out slightly to better utilize rectangular screen space
-  // Math.abs(Math.sin(2 * angle)) is 1 at diagonals (45°, 135°, etc.) and 0 at axes
-  const cornerPush = Math.abs(Math.sin(2 * angle)) * 4; // +3% radius at corners
+  const pos = SEAT_MAP[seatIndex] || { left: 50, top: 50 };
+  const left = pos.left;
+  const top = pos.top;
 
-  const effectiveXRadius = xRadius + cornerPush;
-  const effectiveYRadius = yRadius + cornerPush;
+  // Vector pointing toward the table center (50, 50)
+  const dx = 50 - left;
+  const dy = 50 - top;
+  // Calculate distance to center to normalize the vector
+  const distance = Math.sqrt(dx * dx + dy * dy) || 1;
+  const unitX = dx / distance;
+  const unitY = dy / distance;
 
-  const left = 50 + effectiveXRadius * Math.cos(angle);
-  const top = 50 + effectiveYRadius * Math.sin(angle);
+  // Angle for rotation (if needed anywhere else, though cards just rotate fixed right now)
+  const angle = Math.atan2(top - 50, left - 50);
 
-  // Card inward offset - pulled much closer to player
-  // Main player needs more distance because their cards are larger and face up
-  const cardOffset = isMe ? 14 : 8;
-  const cardLeft = 50 + (effectiveXRadius - cardOffset) * Math.cos(angle);
-  const cardTop = 50 + (effectiveYRadius - cardOffset) * Math.sin(angle);
-
-  // Bet inward offset - pulled right next to the cards
-  const betOffset = isMe ? 20 : 13;
-  const betLeft = 50 + (effectiveXRadius - betOffset) * Math.cos(angle);
-  const betTop = 50 + (effectiveYRadius - betOffset) * Math.sin(angle);
+  // Offsets in EXACT pixels, eliminating aspect ratio stretching
+  // Main player needs more distance because their cards are larger
+  const cardOffsetPx = 90;
+  const betOffsetPx = 180;
 
   return (
     <>
@@ -48,8 +57,8 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
       <div
         className="absolute flex items-center justify-center transition-all duration-700 z-10"
         style={{
-          left: `${cardLeft}%`,
-          top: `${cardTop}%`,
+          left: `calc(${left}% + ${unitX * cardOffsetPx}px)`,
+          top: `calc(${top}% + ${unitY * cardOffsetPx}px)`,
           transform: 'translate(-50%, -50%)',
           width: 'var(--card-width)',
           height: 'calc(var(--card-width) * 1.4)'
@@ -86,7 +95,11 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           className="absolute z-40"
-          style={{ left: `${betLeft}%`, top: `${betTop}%`, transform: 'translate(-50%, -50%)' }}
+          style={{
+            left: `calc(${left}% + ${unitX * betOffsetPx}px)`,
+            top: `calc(${top}% + ${unitY * betOffsetPx}px)`,
+            transform: 'translate(-50%, -50%)'
+          }}
         >
           <div className="glass-ui-gold px-4 py-1.5 rounded-full border-poker-gold/20 shadow-[0_10px_30px_rgba(0,0,0,0.6)] border">
             <p className="text-[9px] font-black text-poker-gold tabular-nums tracking-tighter opacity-90">
