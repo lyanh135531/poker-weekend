@@ -6,7 +6,8 @@ import { GameStage, GameState } from './types/game';
 import Table from './components/Table';
 import Card from './components/Card';
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:4000';
+// Always connect via the same origin so Nginx can proxy WebSocket to the backend
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:7777');
 
 function App() {
   const [socket, setSocket] = useState<Socket | null>(null);
