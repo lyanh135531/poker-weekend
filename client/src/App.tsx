@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCw, Play, User, Users, Coins } from 'lucide-react';
-import { GameState } from './types/game';
+import { GameStage, GameState } from './types/game';
 import Table from './components/Table';
 import Card from './components/Card';
 
@@ -386,10 +386,10 @@ const BetSlider: React.FC<{
   pot: number;
 }> = ({ min, max, value, onChange, pot }) => {
   return (
-    <div className="space-y-2 px-1">
+    <div className="space-y-3 px-1">
       <div className="flex items-center justify-between">
-        <span className="text-[9px] uppercase tracking-widest text-white/30 font-black">Bet</span>
-        <span className="text-base font-black text-poker-gold shadow-sm">${value}</span>
+        <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-white/30 font-black">Bet Amount</span>
+        <span className="text-base md:text-xl font-black text-poker-gold shadow-sm">${value}</span>
       </div>
       
       <input 
@@ -401,7 +401,7 @@ const BetSlider: React.FC<{
         className="gold-slider h-1"
       />
 
-      <div className="grid grid-cols-4 gap-1.5">
+      <div className="grid grid-cols-4 gap-1.5 md:gap-2">
         {[
           { label: 'Min', val: min },
           { label: '1/2', val: Math.min(max, Math.max(min, Math.floor(pot / 2))) },
@@ -411,7 +411,7 @@ const BetSlider: React.FC<{
           <button 
             key={i}
             onClick={() => onChange(p.val)}
-            className="bg-white/5 border border-white/5 text-[7px] font-black uppercase tracking-tighter py-1 rounded hover:bg-white/10 transition-colors"
+            className="bg-white/5 border border-white/5 text-[7px] md:text-[9px] font-black uppercase tracking-tighter py-1.5 md:py-2 rounded hover:bg-white/10 transition-colors"
           >
             {p.label}
           </button>
@@ -473,9 +473,9 @@ const ActionBar = ({ player, gameState, onAction }: { player: any, gameState: an
 
     return (
         <motion.div 
-            initial={{ y: 10, opacity: 0 }}
+            initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="glass-ui-gold p-2.5 rounded-xl flex flex-col gap-2.5 w-48 shadow-[0_15px_30px_rgba(0,0,0,0.5)] border border-white/5"
+            className="glass-ui-gold p-3 md:p-5 rounded-2xl flex flex-col gap-3 md:gap-5 w-52 md:w-80 shadow-[0_20px_50px_rgba(0,0,0,0.6)] border border-white/5"
         >
             <div className="flex justify-between items-center px-1">
               <span className="text-[8px] text-white/30 uppercase font-black tracking-widest">Action Required</span>
@@ -498,13 +498,13 @@ const ActionBar = ({ player, gameState, onAction }: { player: any, gameState: an
               <div className="flex gap-2">
                 <button 
                     onClick={() => onAction('fold')}
-                    className="flex-1 bg-red-500/10 border border-red-500/20 text-red-500 font-black py-2 rounded-lg hover:bg-red-500 hover:text-white transition-all text-[9px] uppercase tracking-wider"
+                    className="flex-1 bg-red-500/10 border border-red-500/20 text-red-500 font-black py-2.5 md:py-4 rounded-xl hover:bg-red-500 hover:text-white transition-all text-[10px] md:text-xs uppercase tracking-wider"
                 >
                     Fold
                 </button>
                 <button 
                     onClick={() => onAction('check')}
-                    className="flex-1 bg-white/5 border border-white/10 text-white font-black py-2 rounded-lg hover:bg-white/10 transition-all text-[9px] uppercase tracking-wider disabled:opacity-20"
+                    className="flex-1 bg-white/5 border border-white/10 text-white font-black py-2.5 md:py-4 rounded-xl hover:bg-white/10 transition-all text-[10px] md:text-xs uppercase tracking-wider disabled:opacity-20"
                     disabled={callAmount > 0}
                 >
                     Check
@@ -514,7 +514,7 @@ const ActionBar = ({ player, gameState, onAction }: { player: any, gameState: an
               {callAmount > 0 && (
                 <button 
                     onClick={() => onAction('call')}
-                    className="w-full bg-white text-slate-950 font-black py-2.5 rounded-lg hover:brightness-110 active:scale-[0.98] transition-all text-[9px] uppercase tracking-[0.2em] shadow-lg"
+                    className="w-full bg-white text-slate-950 font-black py-3 md:py-5 rounded-xl hover:brightness-110 active:scale-[0.98] transition-all text-[10px] md:text-xs uppercase tracking-[0.2em] shadow-lg"
                 >
                     Call ${callAmount}
                 </button>
@@ -522,7 +522,7 @@ const ActionBar = ({ player, gameState, onAction }: { player: any, gameState: an
 
               <button 
                   onClick={() => onAction('raise', betAmount - maxBet)}
-                  className="w-full btn-gold py-2.5 rounded-lg text-[9px] uppercase tracking-[0.2em] font-black group relative overflow-hidden"
+                  className="w-full btn-gold py-3 md:py-5 rounded-xl text-[10px] md:text-xs uppercase tracking-[0.2em] font-black group relative overflow-hidden"
               >
                   <span className="relative z-10">
                     {maxBet === 0 ? `Bet $${betAmount}` : `Raise to $${betAmount}`}

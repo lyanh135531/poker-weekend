@@ -417,7 +417,6 @@ export class PokerEngine {
         p.bet = 0;
         p.hasActed = false;
     });
-    this.state.dealerIndex = (this.state.dealerIndex + 1) % this.state.players.length;
     this.updateTurns();
   }
 
