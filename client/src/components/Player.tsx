@@ -20,15 +20,15 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
   // Traces the exact perimeter of the CSS Table Base
   const SEAT_MAP: Record<number, { left: number; top: number }> = {
     0: { left: 50, top: 100 }, // Hero (Bottom Center)
-    1: { left: 85, top: 95 },  // Bottom Right
-    2: { left: 100, top: 70 }, // Right Bottom
-    3: { left: 100, top: 30 }, // Right Top 
-    4: { left: 85, top: 5 },   // Top Right
-    5: { left: 50, top: 0 },   // Top Center (Dealer/Reserved)
-    6: { left: 15, top: 5 },   // Top Left
-    7: { left: 0, top: 30 },   // Left Top
-    8: { left: 0, top: 70 },   // Left Bottom
-    9: { left: 15, top: 95 },  // Bottom Left
+    1: { left: 15, top: 95 },  // Bottom Left
+    2: { left: 0, top: 70 },   // Left Bottom
+    3: { left: 0, top: 30 },   // Left Top 
+    4: { left: 15, top: 5 },   // Top Left
+    5: { left: 50, top: 0 },   // Top Center
+    6: { left: 85, top: 5 },   // Top Right
+    7: { left: 100, top: 30 }, // Right Top
+    8: { left: 100, top: 70 }, // Right Bottom
+    9: { left: 85, top: 95 },  // Bottom Right
   };
 
   const pos = SEAT_MAP[seatIndex] || { left: 50, top: 50 };

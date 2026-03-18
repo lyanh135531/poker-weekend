@@ -8,7 +8,7 @@ import { PokerEngine } from './core/engine';
 
 dotenv.config();
 
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 7777;
 const app = express();
 app.use(cors());
 

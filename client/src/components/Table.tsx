@@ -65,9 +65,9 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
                       const winner = playersWithSeats.find(p => p.name === gameState.lastWinner?.name);
                       if (!winner) return '20%';
                       const SEAT_MAP: Record<number, { left: number; top: number }> = {
-                        0: { left: 50, top: 100 }, 1: { left: 85, top: 95 }, 2: { left: 100, top: 70 },
-                        3: { left: 100, top: 30 }, 4: { left: 85, top: 5 }, 5: { left: 50, top: 0 },
-                        6: { left: 15, top: 5 }, 7: { left: 0, top: 30 }, 8: { left: 0, top: 70 }, 9: { left: 15, top: 95 }
+                        0: { left: 50, top: 100 }, 1: { left: 15, top: 95 }, 2: { left: 0, top: 70 },
+                        3: { left: 0, top: 30 }, 4: { left: 15, top: 5 }, 5: { left: 50, top: 0 },
+                        6: { left: 85, top: 5 }, 7: { left: 100, top: 30 }, 8: { left: 100, top: 70 }, 9: { left: 85, top: 95 }
                       };
                       return `${SEAT_MAP[winner.seatIndex]?.top || 50}%`;
                     })(),
@@ -75,9 +75,9 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
                       const winner = playersWithSeats.find(p => p.name === gameState.lastWinner?.name);
                       if (!winner) return '50%';
                       const SEAT_MAP: Record<number, { left: number; top: number }> = {
-                        0: { left: 50, top: 100 }, 1: { left: 85, top: 95 }, 2: { left: 100, top: 70 },
-                        3: { left: 100, top: 30 }, 4: { left: 85, top: 5 }, 5: { left: 50, top: 0 },
-                        6: { left: 15, top: 5 }, 7: { left: 0, top: 30 }, 8: { left: 0, top: 70 }, 9: { left: 15, top: 95 }
+                        0: { left: 50, top: 100 }, 1: { left: 15, top: 95 }, 2: { left: 0, top: 70 },
+                        3: { left: 0, top: 30 }, 4: { left: 15, top: 5 }, 5: { left: 50, top: 0 },
+                        6: { left: 85, top: 5 }, 7: { left: 100, top: 30 }, 8: { left: 100, top: 70 }, 9: { left: 85, top: 95 }
                       };
                       return `${SEAT_MAP[winner.seatIndex]?.left || 50}%`;
                     })(),

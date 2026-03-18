@@ -16,8 +16,8 @@ Your project is ready with a professional Dockerized setup.
    docker-compose up --build
    ```
 4. **Access the App**:
-   - Frontend: [http://localhost:3000](http://localhost:3000)
-   - Backend API: [http://localhost:4000](http://localhost:4000)
+   - Frontend: [http://localhost:7778](http://localhost:7778)
+   - Backend API: [http://localhost:7777](http://localhost:7777)
 
 ## Tech Highlights
 - **Mobile First**: Viewport locked, large touch targets, premium gradients.
