@@ -51,6 +51,8 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
   const cardOffsetPx = 90;
   const betOffsetPx = 180;
 
+  const infoOffsetPx = 45; // Pixel distance from Avatar center to Info Box center
+
   return (
     <>
       {/* 1. Player Cards Area - Anchored and Balanced */}
@@ -95,10 +97,10 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           className="absolute z-40"
-          style={{
-            left: `calc(${left}% + ${unitX * betOffsetPx}px)`,
-            top: `calc(${top}% + ${unitY * betOffsetPx}px)`,
-            transform: 'translate(-50%, -50%)'
+          style={{ 
+            left: `calc(${left}% + ${unitX * betOffsetPx}px)`, 
+            top: `calc(${top}% + ${unitY * betOffsetPx}px)`, 
+            transform: 'translate(-50%, -50%)' 
           }}
         >
           <div className="glass-ui-gold px-4 py-1.5 rounded-full border-poker-gold/20 shadow-[0_10px_30px_rgba(0,0,0,0.6)] border">
@@ -109,76 +111,92 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
         </motion.div>
       )}
 
-      {/* 3. Unified Player Plate - High-fidelity and aligned */}
+      {/* 3. Player Anchor - Base position purely for opacity/status container */}
       <div
-        className={`absolute flex flex-col items-center gap-1.5 transition-all duration-700 z-30 ${(!player.isOnline || player.isFolded) ? 'opacity-40 grayscale-[0.8] scale-95' : 'opacity-100 grayscale-0 scale-100'}`}
+        className={`absolute transition-all duration-700 z-30 ${(!player.isOnline || player.isFolded) ? 'opacity-40 grayscale-[0.8] scale-95' : 'opacity-100 grayscale-0 scale-100'}`}
         style={{
           left: `${left}%`,
           top: `${top}%`,
-          transform: 'translate(-50%, -50%)',
-          width: 'var(--player-plate-width)'
         }}
       >
-        <div className={`relative p-1 rounded-full transition-all duration-500 scale-110 ${player.isTurn ? 'animate-turn-glow' : ''}`}>
-          {/* Status Badges */}
-          <div className="absolute -top-6 left-1/2 -translate-x-1/2 flex flex-col gap-0.5 z-[60] items-center">
-            {player.isTurn && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-poker-gold text-slate-950 text-[8px] font-black px-2 py-0.5 rounded-full shadow-[0_0_20px_rgba(195,163,91,0.8)] border border-white/20 whitespace-nowrap animate-pulse"
-              >
-                THINKING
-              </motion.div>
-            )}
-            {player.isAllIn && (
-              <div className="bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full shadow-lg border border-white/10 whitespace-nowrap scale-90">
-                ALL-IN
+        {/* Avatar - Centered directly on edge */}
+        <div className="absolute" style={{ transform: 'translate(-50%, -50%)' }}>
+          
+          {/* The WOW Radial Laser Timer - Points exactly towards the center! */}
+          {player.isTurn && (
+            <div 
+              className="absolute top-1/2 left-1/2 z-0 pointer-events-none"
+              style={{ 
+                transform: `rotate(${Math.atan2(unitY, unitX) * (180 / Math.PI)}deg)`,
+              }}
+            >
+              {/* Laser beam starting just outside the avatar ring (25px offset) and extending 70px towards center */}
+              <div className="absolute top-[-1px] left-[25px] h-[3px] w-[70px] bg-white/10 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-poker-gold shadow-[0_0_15px_var(--poker-gold)]"
+                  initial={{ width: "100%" }}
+                  animate={{ width: "0%" }}
+                  transition={{ duration: 60, ease: "linear" }}
+                />
               </div>
-            )}
-            {!player.isOnline && (
-              <div className="bg-slate-700 text-white text-[6px] font-black px-1.5 py-0.5 rounded-full shadow-sm border border-white/5 whitespace-nowrap scale-90 opacity-80">
-                OFFLINE
-              </div>
-            )}
-          </div>
-
-          {/* Avatar Circle */}
-          <div className={`w-9 h-9 rounded-full border border-white/5 overflow-hidden shadow-xl relative bg-slate-900 transition-all duration-300 ${isMe ? 'ring-2 ring-poker-gold/50 ring-offset-2 ring-offset-slate-950' : ''} ${player.isTurn ? 'ring-2 ring-poker-gold shadow-[0_0_25px_rgba(195,163,91,0.6)]' : ''}`}>
-            <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 outline-none transition-all duration-300 ${player.isTurn ? 'opacity-100' : 'opacity-60'}`}>
-              <User className={`w-5 h-5 transition-colors duration-300 ${player.isTurn ? 'text-poker-gold drop-shadow-[0_0_8px_rgba(195,163,91,0.8)]' : 'text-slate-500/50'}`} />
-            </div>
-          </div>
-          {/* Dealer Marker */}
-          {isDealer && (
-            <div className="absolute -top-0.5 -right-0.5 bg-poker-gold text-slate-950 p-1 rounded-full shadow-lg z-50 ring-1 ring-slate-950 scale-90">
-              <Crown className="w-2.5 h-2.5 fill-current" />
             </div>
           )}
+
+          <div className={`relative p-1 rounded-full transition-all duration-500 scale-110 ${player.isTurn ? 'animate-turn-glow' : ''}`}>
+            {/* Status Badges */}
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 flex flex-col gap-0.5 z-[60] items-center">
+              {player.isAllIn && (
+                <div className="bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full shadow-lg border border-white/10 whitespace-nowrap scale-90">
+                  ALL-IN
+                </div>
+              )}
+              {!player.isOnline && (
+                <div className="bg-slate-700 text-white text-[6px] font-black px-1.5 py-0.5 rounded-full shadow-sm border border-white/5 whitespace-nowrap scale-90 opacity-80">
+                  OFFLINE
+                </div>
+              )}
+            </div>
+
+            {/* Avatar Circle */}
+            <div className={`w-9 h-9 rounded-full border border-white/5 overflow-hidden shadow-xl relative bg-slate-900 transition-all duration-300 ${isMe ? 'ring-2 ring-poker-gold/50 ring-offset-2 ring-offset-slate-950' : ''} ${player.isTurn ? 'ring-2 ring-poker-gold shadow-[0_0_25px_rgba(195,163,91,0.6)]' : ''}`}>
+              <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 outline-none transition-all duration-300 ${player.isTurn ? 'opacity-100' : 'opacity-60'}`}>
+                <User className={`w-5 h-5 transition-colors duration-300 ${player.isTurn ? 'text-poker-gold drop-shadow-[0_0_8px_rgba(195,163,91,0.8)]' : 'text-slate-500/50'}`} />
+              </div>
+            </div>
+            {/* Dealer Marker */}
+            {isDealer && (
+              <div className="absolute -top-0.5 -right-0.5 bg-poker-gold text-slate-950 p-1 rounded-full shadow-lg z-50 ring-1 ring-slate-950 scale-90">
+                <Crown className="w-2.5 h-2.5 fill-current" />
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Info Box - Glassmorphic Container (Narrowed & Tighter) */}
-        <div className="glass-ui w-full rounded-lg px-2 py-1 space-y-0 text-center shadow-xl relative overflow-hidden border-white/5 group">
-          <div className="flex items-center justify-center gap-1 opacity-60">
-            <span className={`w-1 h-1 rounded-full ${player.isTurn ? 'bg-poker-gold animate-pulse' : 'bg-slate-700'}`} />
-            <p className="text-[8px] font-black text-white/50 uppercase tracking-[0.1em] truncate">
-              {player.name}
-            </p>
+        {/* Info Box - Translated AWAY from center */}
+        <div 
+          className="absolute"
+          style={{ 
+            transform: `translate(calc(-50% - ${unitX * infoOffsetPx}px), calc(-50% - ${unitY * infoOffsetPx}px))`,
+            width: 'var(--player-plate-width)'
+          }}
+        >
+          <div className="flex flex-col items-center drop-shadow-2xl translate-y-1">
+            {/* The Name - Floating cleanly above */}
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <span className={`w-1.5 h-1.5 rounded-full shadow-sm ${player.isTurn ? 'bg-poker-gold shadow-[0_0_8px_rgba(212,175,55,0.8)] animate-pulse' : 'bg-slate-500/50'}`} />
+              <span className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] drop-shadow-md truncate max-w-[80px]">
+                {player.name}
+              </span>
+            </div>
+
+            {/* The Chips - Big, bold, glowing, resting on an elegant line */}
+            <div className="relative w-full px-2">
+              <p className="text-[17px] font-black text-poker-gold tabular-nums tracking-tighter drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] flex items-center justify-center leading-none">
+                <span className="text-white/30 text-[10px] mr-1">$</span>
+                {player.chips.toLocaleString()}
+              </p>
+            </div>
           </div>
-
-          <p className="text-sm font-black text-white/90 tabular-nums tracking-tight">
-            <span className="text-poker-gold/50 text-[10px] mr-0.5">$</span>{player.chips}
-          </p>
-
-          {/* Progress bar for turn */}
-          {player.isTurn && (
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: "100%" }}
-              transition={{ duration: 60, ease: "linear" }}
-              className="h-[3px] bg-poker-gold absolute bottom-0 left-0 shadow-[0_0_10px_var(--poker-gold)]"
-            />
-          )}
         </div>
       </div>
     </>
