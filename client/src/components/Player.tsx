@@ -12,9 +12,10 @@ interface PlayerProps {
   isDealer?: boolean;
   stage: string;
   winningCards?: string[];
+  isFoldVictory?: boolean;
 }
 
-const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, isDealer, stage, winningCards }) => {
+const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, isDealer, stage, winningCards, isFoldVictory }) => {
   // Elliptical distribution for seating - fixed 10-slot slot system
   const angle = (seatIndex / totalSeats) * 2 * Math.PI + Math.PI / 2;
   const xRadius = 28; // percentage (decreased to bring side players closer)
@@ -70,7 +71,7 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
                   transition={{ duration: 0.5, ease: "backOut" }}
                   className={`${isWinningCard ? 'z-50' : 'z-10'} shadow-[0_20px_40px_rgba(0,0,0,0.6)]`}
                 >
-                  <Card code={card} hidden={stage !== 'SHOWDOWN' && !isMe} />
+                  <Card code={card} hidden={!isMe && (stage !== 'SHOWDOWN' || !!isFoldVictory)} />
                 </motion.div>
               );
             })}
