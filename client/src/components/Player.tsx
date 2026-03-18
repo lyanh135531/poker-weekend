@@ -65,6 +65,14 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({ player, se
   const progress = timeLeft / totalTime;
   const isEmergency = timeLeft < 10000;
 
+  // Privacy Mode (Local state for Hero to hide cards)
+  const [isMasked, setIsMasked] = React.useState(false);
+
+  // Auto-reveal on new hand or showdown
+  React.useEffect(() => {
+    setIsMasked(false);
+  }, [player.cards.join(','), stage === 'SHOWDOWN']);
+
   // Offsets in EXACT pixels, eliminating aspect ratio stretching
   // Main player needs more distance because their cards are larger
   const cardOffsetPx = 90;
@@ -74,18 +82,19 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({ player, se
 
   return (
     <>
-      {/* 1. Player Cards Area - Anchored and Balanced */}
-      <div
-        className="absolute flex items-center justify-center transition-all duration-700 z-10"
+      {/* 1. Hole Cards - Tappable for Privacy Mode (Hero Only) */}
+      <motion.div
+        className={`absolute flex items-center justify-center ${isMe ? 'z-50' : 'z-10'} ${isMe && !player.isFolded && player.cards.length > 0 ? 'cursor-pointer group/cards pointer-events-auto' : ''}`}
+        onClick={() => isMe && !player.isFolded && player.cards.length > 0 && setIsMasked(!isMasked)}
         style={{
           left: `calc(${left}% + ${unitX * cardOffsetPx}px)`,
           top: `calc(${top}% + ${unitY * cardOffsetPx}px)`,
           transform: 'translate(-50%, -50%)',
-          width: 'var(--card-width)',
-          height: 'calc(var(--card-width) * 1.4)'
+          width: 'calc(var(--card-width) * 1.5)',
+          height: 'calc(var(--card-width) * 1.6)'
         }}
       >
-        <div className="flex -space-x-5">
+        <div className="flex -space-x-5 relative">
           <AnimatePresence mode="popLayout">
             {!player.isFolded && player.cards.map((card, i) => {
               const isWinningCard = winningCards?.includes(card);
@@ -102,13 +111,38 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({ player, se
                   transition={{ duration: 0.5, ease: "backOut" }}
                   className={`${isWinningCard ? 'z-50' : 'z-10'} shadow-[0_20px_40px_rgba(0,0,0,0.6)]`}
                 >
-                  <Card code={card} hidden={!isMe && (stage !== 'SHOWDOWN' || !!isFoldVictory)} />
+                  <Card code={card} hidden={isMasked || (!isMe && (stage !== 'SHOWDOWN' || !!isFoldVictory))} />
                 </motion.div>
               );
             })}
           </AnimatePresence>
+
+          {/* Privacy Toggle Hint (Hero Only) */}
+          {isMe && !player.isFolded && player.cards.length > 0 && (
+             <div className="absolute inset-x-0 -bottom-6 flex justify-center opacity-0 group-hover/cards:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                <span className="bg-black/80 backdrop-blur-md px-2 py-0.5 rounded text-[8px] font-black text-poker-gold uppercase tracking-widest border border-poker-gold/20 shadow-xl">
+                   {isMasked ? 'Tap to Reveal' : 'Tap to Hide'}
+                </span>
+             </div>
+          )}
+
+          {/* Private Overlay - Premium Stamp Appearance */}
+          <AnimatePresence>
+            {isMasked && !player.isFolded && player.cards.length > 0 && (
+              <motion.div 
+                 initial={{ opacity: 0, scale: 0.5, rotate: 0 }}
+                 animate={{ opacity: 1, scale: 1.2, rotate: -15 }}
+                 exit={{ opacity: 0, scale: 0.8 }}
+                 className="absolute inset-0 flex items-center justify-center z-[100] pointer-events-none"
+              >
+                 <div className="glass-ui-gold px-3 py-1 rounded-sm border-poker-gold/40 shadow-2xl backdrop-blur-md">
+                    <span className="text-[10px] font-black text-poker-gold uppercase tracking-[0.3em] italic drop-shadow-md">PRIVATE</span>
+                 </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </div>
+      </motion.div>
 
       {/* 2. Active Bet Badge - Independent and Clearly Visible on Felt */}
       {player.bet > 0 && (
