@@ -17,21 +17,28 @@ interface PlayerProps {
 const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, isDealer, stage, winningCards }) => {
   // Elliptical distribution for seating - fixed 10-slot slot system
   const angle = (seatIndex / totalSeats) * 2 * Math.PI + Math.PI / 2;
-  const xRadius = 40; // percentage
+  const xRadius = 28; // percentage (decreased to bring side players closer)
   const yRadius = 35; // percentage
 
-  const left = 50 + xRadius * Math.cos(angle);
-  const top = 50 + yRadius * Math.sin(angle);
+  // Push corners out slightly to better utilize rectangular screen space
+  // Math.abs(Math.sin(2 * angle)) is 1 at diagonals (45°, 135°, etc.) and 0 at axes
+  const cornerPush = Math.abs(Math.sin(2 * angle)) * 5; // +3% radius at corners
+
+  const effectiveXRadius = xRadius + cornerPush;
+  const effectiveYRadius = yRadius + cornerPush;
+
+  const left = 50 + effectiveXRadius * Math.cos(angle);
+  const top = 50 + effectiveYRadius * Math.sin(angle);
 
   // Card inward offset - slightly tighter
   const cardOffset = 12;
-  const cardLeft = 50 + (xRadius - cardOffset) * Math.cos(angle);
-  const cardTop = 50 + (yRadius - cardOffset) * Math.sin(angle);
+  const cardLeft = 50 + (effectiveXRadius - cardOffset) * Math.cos(angle);
+  const cardTop = 50 + (effectiveYRadius - cardOffset) * Math.sin(angle);
 
   // Bet inward offset - pulled closer to the player plate
   const betOffset = 22;
-  const betLeft = 48 + (xRadius - betOffset) * Math.cos(angle);
-  const betTop = 48 + (yRadius - betOffset) * Math.sin(angle);
+  const betLeft = 48 + (effectiveXRadius - betOffset) * Math.cos(angle);
+  const betTop = 48 + (effectiveYRadius - betOffset) * Math.sin(angle);
 
   return (
     <>
@@ -54,10 +61,10 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
                 <motion.div
                   key={i}
                   initial={{ scale: 0, rotate: -20, y: 30 }}
-                  animate={{ 
-                    scale: 1, 
-                    rotate: (i === 0 ? -8 : 8), 
-                    y: isWinningCard ? -20 : 0 
+                  animate={{
+                    scale: 1,
+                    rotate: (i === 0 ? -8 : 8),
+                    y: isWinningCard ? -20 : 0
                   }}
                   exit={{ scale: 0, opacity: 0, y: 40, rotate: (i === 0 ? -40 : 40) }}
                   transition={{ duration: 0.5, ease: "backOut" }}
@@ -101,7 +108,7 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
           {/* Status Badges */}
           <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex flex-col gap-0.5 z-[60] items-center">
             {player.isTurn && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="bg-poker-gold text-slate-950 text-[8px] font-black px-2 py-0.5 rounded-full shadow-[0_0_20px_rgba(195,163,91,0.8)] border border-white/20 whitespace-nowrap animate-pulse"
@@ -120,7 +127,7 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
               </div>
             )}
           </div>
-          
+
           {/* Avatar Circle */}
           <div className={`w-9 h-9 rounded-full border border-white/5 overflow-hidden shadow-xl relative bg-slate-900 transition-all duration-300 ${isMe ? 'ring-2 ring-poker-gold/50 ring-offset-2 ring-offset-slate-950' : ''} ${player.isTurn ? 'ring-2 ring-poker-gold shadow-[0_0_25px_rgba(195,163,91,0.6)]' : ''}`}>
             <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 outline-none transition-all duration-300 ${player.isTurn ? 'opacity-100' : 'opacity-60'}`}>
