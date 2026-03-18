@@ -99,7 +99,16 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
       >
         <div className={`relative p-1 rounded-full transition-all duration-500 scale-110 ${player.isTurn ? 'animate-turn-glow' : ''}`}>
           {/* Status Badges */}
-          <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 flex flex-col gap-0.5 z-[60] items-center">
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex flex-col gap-0.5 z-[60] items-center">
+            {player.isTurn && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-poker-gold text-slate-950 text-[8px] font-black px-2 py-0.5 rounded-full shadow-[0_0_20px_rgba(195,163,91,0.8)] border border-white/20 whitespace-nowrap animate-pulse"
+              >
+                THINKING
+              </motion.div>
+            )}
             {player.isAllIn && (
               <div className="bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full shadow-lg border border-white/10 whitespace-nowrap scale-90">
                 ALL-IN
@@ -113,9 +122,9 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
           </div>
           
           {/* Avatar Circle */}
-          <div className={`w-9 h-9 rounded-full border border-white/5 overflow-hidden shadow-xl relative bg-slate-900 ${isMe ? 'ring-2 ring-poker-gold/50 ring-offset-2 ring-offset-slate-950' : ''}`}>
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 outline-none opacity-60">
-              <User className="w-5 h-5 text-slate-500/50" />
+          <div className={`w-9 h-9 rounded-full border border-white/5 overflow-hidden shadow-xl relative bg-slate-900 transition-all duration-300 ${isMe ? 'ring-2 ring-poker-gold/50 ring-offset-2 ring-offset-slate-950' : ''} ${player.isTurn ? 'ring-2 ring-poker-gold shadow-[0_0_25px_rgba(195,163,91,0.6)]' : ''}`}>
+            <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 outline-none transition-all duration-300 ${player.isTurn ? 'opacity-100' : 'opacity-60'}`}>
+              <User className={`w-5 h-5 transition-colors duration-300 ${player.isTurn ? 'text-poker-gold drop-shadow-[0_0_8px_rgba(195,163,91,0.8)]' : 'text-slate-500/50'}`} />
             </div>
           </div>
           {/* Dealer Marker */}

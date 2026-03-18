@@ -401,10 +401,12 @@ const BetSlider: React.FC<{
         className="gold-slider h-1"
       />
 
-      <div className="grid grid-cols-4 gap-1.5 md:gap-2">
+      <div className="grid grid-cols-3 gap-1.5 md:gap-2">
         {[
           { label: 'Min', val: min },
+          { label: '1/3', val: Math.min(max, Math.max(min, Math.floor(pot / 3))) },
           { label: '1/2', val: Math.min(max, Math.max(min, Math.floor(pot / 2))) },
+          { label: '3/4', val: Math.min(max, Math.max(min, Math.floor(pot * 0.75))) },
           { label: 'Pot', val: Math.min(max, Math.max(min, pot)) },
           { label: 'All', val: max }
         ].map((p, i) => (
