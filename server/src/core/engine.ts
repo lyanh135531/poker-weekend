@@ -297,10 +297,12 @@ export class PokerEngine {
     const activePlayers = this.state.players.filter(p => !p.isFolded);
     const canAct = activePlayers.filter(p => !p.isAllIn);
 
-    if (canAct.length <= 1 && this.state.stage !== GameStage.PRE_FLOP) {
+    if (canAct.length <= 1 && this.state.stage !== GameStage.SHOWDOWN && activePlayers.length >= 2) {
       // Just deal the rest and showdown
       while (this.state.stage !== GameStage.SHOWDOWN) {
+        const prevStage = this.state.stage;
         this.dealNextCards();
+        if (this.state.stage === prevStage) break; // Infinite loop safety
       }
       this.resolveWinner();
       return;

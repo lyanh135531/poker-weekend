@@ -378,7 +378,8 @@ const Timer = ({ expiresAt }: { expiresAt: number }) => {
 
 const ActionBar = ({ player, gameState, onAction }: { player: any, gameState: any, onAction: (type: string, amount?: number) => void }) => {
     // Only show if it's the local player's turn
-    if (!player || !player.isTurn) return null;
+    // Only show if it's the local player's turn and they aren't all-in
+    if (!player || !player.isTurn || player.isAllIn) return null;
 
     const maxBet = Math.max(...gameState.players.map((p: any) => p.bet), 0);
     const callAmount = maxBet - player.bet;
@@ -394,12 +395,16 @@ const ActionBar = ({ player, gameState, onAction }: { player: any, gameState: an
       sliderMax = Math.min(maxPossbileBet, callAmount + gameState.config.raiseLimit);
     }
 
+    // Safety: ensure sliderMax is at least minRaiseTotal for the slider range
+    // If we can't afford a full raise, minRaiseTotal will be capped at sliderMax anyway
+    const sliderMin = Math.min(sliderMax, minRaiseTotal);
+
     const [betAmount, setBetAmount] = React.useState(Math.min(sliderMax, minRaiseTotal));
 
     // Sync betAmount if it falls out of bounds (e.g. after someone else raises)
     React.useEffect(() => {
-      setBetAmount(prev => Math.min(sliderMax, Math.max(prev, minRaiseTotal)));
-    }, [minRaiseTotal, sliderMax]);
+      setBetAmount(prev => Math.min(sliderMax, Math.max(prev, sliderMin)));
+    }, [sliderMin, sliderMax]);
 
     return (
         <motion.div 
@@ -414,7 +419,7 @@ const ActionBar = ({ player, gameState, onAction }: { player: any, gameState: an
             {/* Betting Controls */}
             {sliderMax > callAmount && (
               <BetSlider 
-                min={minRaiseTotal} 
+                min={sliderMin} 
                 max={sliderMax} 
                 value={betAmount} 
                 onChange={setBetAmount}
@@ -451,7 +456,7 @@ const ActionBar = ({ player, gameState, onAction }: { player: any, gameState: an
               )}
 
               <button 
-                  onClick={() => onAction('raise', betAmount - callAmount)}
+                  onClick={() => onAction('raise', betAmount - maxBet)}
                   className="w-full btn-gold py-2.5 rounded-lg text-[9px] uppercase tracking-[0.2em] font-black group relative overflow-hidden"
               >
                   <span className="relative z-10">
