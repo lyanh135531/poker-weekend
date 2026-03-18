@@ -23,6 +23,7 @@ export interface Player {
   hasActed: boolean;
   isDealer: boolean;
   isAllIn: boolean;
+  isOnline: boolean;
 }
 
 export interface GameConfig {

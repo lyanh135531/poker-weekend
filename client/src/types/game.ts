@@ -20,6 +20,7 @@ export interface Player {
   isFolded: boolean;
   isTurn: boolean;
   isAllIn: boolean;
+  isOnline: boolean;
   bet: number;
 }
 

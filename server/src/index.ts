@@ -17,7 +17,8 @@ const io = new Server(httpServer, {
   cors: {
     origin: "*", 
     methods: ["GET", "POST"]
-  }
+  },
+  pingTimeout: 600000 // 10 minutes to support long hands and spectators
 });
 
 const redisClient = createClient({
@@ -39,7 +40,7 @@ async function loadGameState(roomId: string): Promise<PokerEngine | null> {
     if (data) {
         const state = JSON.parse(data);
         const engine = new PokerEngine(roomId, state.creatorId || 'SYSTEM');
-        // A real senior app would have an 'inflate' method to restore state properly
+        engine.inflate(state);
         return engine;
     }
     return null;
@@ -58,7 +59,12 @@ async function startServer() {
             console.log(`Join Room Request: ${roomId} from ${name}`);
             socket.join(roomId);
             if (!engines[roomId]) {
-                engines[roomId] = new PokerEngine(roomId, socket.id, config);
+                const savedEngine = await loadGameState(roomId);
+                if (savedEngine) {
+                    engines[roomId] = savedEngine;
+                } else {
+                    engines[roomId] = new PokerEngine(roomId, socket.id, config);
+                }
             }
             
             const engine = engines[roomId];
@@ -93,10 +99,13 @@ async function startServer() {
     socket.on('action', async (data) => {
         try {
             const { roomId, type, amount } = data || {};
-            console.log(`Action Request: ${type} in ${roomId}`);
-            if (!roomId || !engines[roomId]) {
-                return socket.emit('error', 'Session synchronized failed - please re-join');
+            if (!roomId) return;
+            if (!engines[roomId]) {
+                const savedEngine = await loadGameState(roomId);
+                if (savedEngine) engines[roomId] = savedEngine;
+                else return socket.emit('error', 'Session synchronized failed - please re-join');
             }
+            console.log(`Action Request: ${type} in ${roomId}`);
             const engine = engines[roomId];
             if (engine && engine.action(socket.id, type, amount)) {
                 io.to(roomId).emit('game_update', engine.getState());
@@ -110,12 +119,18 @@ async function startServer() {
     socket.on('leave_room', async (data) => {
         try {
             const { roomId } = data || {};
-            if (roomId && engines[roomId]) {
-                const engine = engines[roomId];
-                engine.removePlayer(socket.id);
-                io.to(roomId).emit('game_update', engine.getState());
-                socket.leave(roomId);
-                await saveGameState(roomId, engine);
+            if (roomId) {
+                if (!engines[roomId]) {
+                    const savedEngine = await loadGameState(roomId);
+                    if (savedEngine) engines[roomId] = savedEngine;
+                }
+                if (engines[roomId]) {
+                    const engine = engines[roomId];
+                    engine.removePlayer(socket.id);
+                    io.to(roomId).emit('game_update', engine.getState());
+                    socket.leave(roomId);
+                    await saveGameState(roomId, engine);
+                }
             }
         } catch (err) {
             console.error('Leave Room Error:', err);
@@ -125,11 +140,17 @@ async function startServer() {
     socket.on('top_up', async (data) => {
         try {
             const { roomId } = data || {};
-            if (roomId && engines[roomId]) {
-                const engine = engines[roomId];
-                if (engine.topUp(socket.id)) {
-                    io.to(roomId).emit('game_update', engine.getState());
-                    await saveGameState(roomId, engine);
+            if (roomId) {
+                if (!engines[roomId]) {
+                    const savedEngine = await loadGameState(roomId);
+                    if (savedEngine) engines[roomId] = savedEngine;
+                }
+                if (engines[roomId]) {
+                    const engine = engines[roomId];
+                    if (engine.topUp(socket.id)) {
+                        io.to(roomId).emit('game_update', engine.getState());
+                        await saveGameState(roomId, engine);
+                    }
                 }
             }
         } catch (err) {

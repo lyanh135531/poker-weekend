@@ -80,7 +80,7 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
 
       {/* 3. Unified Player Plate - High-fidelity and aligned */}
       <div
-        className={`absolute flex flex-col items-center gap-1.5 transition-all duration-700 z-30 ${player.isFolded ? 'opacity-40 grayscale-[0.8] scale-95' : 'opacity-100 grayscale-0 scale-100'}`}
+        className={`absolute flex flex-col items-center gap-1.5 transition-all duration-700 z-30 ${(!player.isOnline || player.isFolded) ? 'opacity-40 grayscale-[0.8] scale-95' : 'opacity-100 grayscale-0 scale-100'}`}
         style={{
           left: `${left}%`,
           top: `${top}%`,
@@ -89,12 +89,20 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
         }}
       >
         <div className={`relative p-1 rounded-full transition-all duration-500 scale-110 ${player.isTurn ? 'animate-turn-glow' : ''}`}>
-          {/* All-in Badge */}
-          {player.isAllIn && (
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full z-[60] shadow-lg animate-bounce border border-white/20">
-              ALL-IN
-            </div>
-          )}
+          {/* Status Badges */}
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex flex-col gap-1 z-[60] items-center">
+            {player.isAllIn && (
+              <div className="bg-red-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-lg animate-bounce border border-white/20 whitespace-nowrap">
+                ALL-IN
+              </div>
+            )}
+            {!player.isOnline && (
+              <div className="bg-slate-700 text-white text-[7px] font-black px-2 py-0.5 rounded-full shadow-lg border border-white/10 whitespace-nowrap">
+                OFFLINE
+              </div>
+            )}
+          </div>
+          
           {/* Avatar Circle */}
           <div className={`w-11 h-11 rounded-full border-2 border-white/10 overflow-hidden shadow-2xl relative bg-slate-900 ${isMe ? 'ring-2 ring-poker-gold ring-offset-4 ring-offset-slate-950' : ''}`}>
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 outline-none">

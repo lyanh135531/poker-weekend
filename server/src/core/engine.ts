@@ -31,6 +31,14 @@ export class PokerEngine {
   private playerStats: Record<string, number> = {}; // name -> chips persistence
 
   addPlayer(id: string, name: string) {
+    // Check if player already exists (re-joining)
+    const existingPlayer = this.state.players.find(p => p.name === name);
+    if (existingPlayer) {
+      existingPlayer.id = id;
+      existingPlayer.isOnline = true;
+      return true;
+    }
+
     if (this.state.players.length >= 10) return false;
     
     // Persist chips by name if they were here before
@@ -46,7 +54,8 @@ export class PokerEngine {
       isAllIn: false,
       bet: 0,
       hasActed: false,
-      isDealer: this.state.players.length === 0 // First player is dealer
+      isDealer: this.state.players.length === 0, // First player is dealer
+      isOnline: true
     });
     
     this.playerStats[name] = chips;
@@ -76,43 +85,30 @@ export class PokerEngine {
     if (playerIndex === -1) return;
 
     const player = this.state.players[playerIndex];
+    player.isOnline = false;
 
-    // Mark as folded logically if game is active so they don't block anything
-    if (this.state.stage !== GameStage.WAITING && !player.isFolded) {
-      player.isFolded = true;
-      // If it's their turn, move it immediately
-      if (this.state.currentTurnIndex === playerIndex) {
-        this.nextTurn();
-      }
-    }
-
-    // Handle index shifting for turn and dealer before removal
-    if (this.state.stage !== GameStage.WAITING) {
-      // Fix: If nextTurn() was called, currentTurnIndex might already be ahead
-      if (this.state.currentTurnIndex > playerIndex) {
-        this.state.currentTurnIndex--;
-      }
-
-      // Shift dealer index accurately
-      if (this.state.dealerIndex === playerIndex) {
-        // Dealer left - if it was the last person, wrap to 0, 
-        // otherwise it stays at playerIndex which will be the next person after splice
-        if (this.state.dealerIndex === this.state.players.length - 1) {
-          this.state.dealerIndex = 0;
+    // If game is active, just leave them offline & folded
+    if (this.state.stage !== GameStage.WAITING && this.state.stage !== GameStage.SHOWDOWN) {
+      if (!player.isFolded) {
+        player.isFolded = true;
+        if (this.state.currentTurnIndex === playerIndex) {
+          this.nextTurn();
         }
-      } else if (this.state.dealerIndex > playerIndex) {
-        this.state.dealerIndex--;
       }
-
-      // Shift last raiser index
-      if (this.state.lastRaiserIndex === playerIndex) {
-        this.state.lastRaiserIndex = null;
-      } else if (this.state.lastRaiserIndex !== null && this.state.lastRaiserIndex > playerIndex) {
-        this.state.lastRaiserIndex--;
-      }
+      return; 
     }
 
+    // Otherwise, remove physically
     this.state.players.splice(playerIndex, 1);
+
+    // Shift dealer index correctly
+    if (this.state.dealerIndex === playerIndex) {
+        if (this.state.dealerIndex >= this.state.players.length) {
+            this.state.dealerIndex = 0;
+        }
+    } else if (this.state.dealerIndex > playerIndex) {
+        this.state.dealerIndex--;
+    }
 
     // Cancel game if too few players left
     if (this.state.players.length < 2 && this.state.stage !== GameStage.WAITING) {
@@ -338,6 +334,8 @@ export class PokerEngine {
         if (nextIndex === (this.state.dealerIndex + 1) % n) break; // Circular safety
     }
     this.state.currentTurnIndex = nextIndex;
+    this.resetTurnTimer();
+    this.updateTurns();
   }
 
   private dealNextCards() {
@@ -443,6 +441,15 @@ export class PokerEngine {
       return true;
     }
     return false;
+  }
+
+  inflate(state: GameState) {
+    this.state = state;
+    // Restore player stats for consistent chips
+    state.players.forEach(p => {
+      this.playerStats[p.name] = p.chips;
+    });
+    this.updateTurns();
   }
 
   getState(): GameState {
