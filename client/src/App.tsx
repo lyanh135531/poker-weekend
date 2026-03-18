@@ -96,17 +96,28 @@ function App() {
           animate={{ opacity: 1, scale: 1 }}
           className="glass-ui-gold p-8 rounded-[2rem] w-full max-w-md space-y-8"
         >
-          <div className="text-center space-y-2">
-            <h1 className="text-5xl font-black tracking-tighter text-white">
-              POKER<span className="text-poker-gold">WKD</span>
-            </h1>
-            <div className="flex items-center justify-center gap-3">
-               <div className="h-[1px] w-6 bg-poker-gold/30" />
-               <p className="text-poker-gold text-[8px] uppercase tracking-[0.6em] font-black opacity-60">
-                 Elite Series
+          <div className="text-center space-y-3 pb-2">
+            <motion.h1 
+              initial={{ y: -20, opacity: 0, filter: 'blur(10px)' }}
+              animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
+              transition={{ duration: 1, ease: 'easeOut' }}
+              className="text-6xl font-black tracking-tighter"
+            >
+              <span className="text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]">POKER</span>
+              <span className="bg-gradient-to-br from-yellow-300 via-poker-gold to-yellow-700 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(195,163,91,0.6)] pr-2">WKD</span>
+            </motion.h1>
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.8 }}
+              className="flex items-center justify-center gap-4"
+            >
+               <div className="h-[1px] w-12 bg-gradient-to-r from-transparent to-poker-gold/50" />
+               <p className="text-poker-gold text-[9px] uppercase tracking-[0.8em] font-black opacity-80 drop-shadow-md">
+                 High Roller
                </p>
-               <div className="h-[1px] w-6 bg-poker-gold/30" />
-            </div>
+               <div className="h-[1px] w-12 bg-gradient-to-l from-transparent to-poker-gold/50" />
+            </motion.div>
           </div>
 
           <div className="flex bg-white/5 p-1 rounded-xl gap-1.5">
@@ -194,7 +205,7 @@ function App() {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="grid grid-cols-2 gap-4 overflow-hidden"
+                        className="grid grid-cols-2 gap-4 overflow-hidden pb-2"
                       >
                          <div className="space-y-2 col-span-2">
                             <label className="text-[9px] uppercase tracking-widest text-white/30 font-black ml-1">Initial Buy-In ($)</label>
@@ -255,9 +266,12 @@ function App() {
             <button 
               type="submit" 
               disabled={!socket?.connected}
-              className="btn-gold w-full text-[11px] font-black py-4 disabled:opacity-50 disabled:grayscale transition-all shadow-xl"
+              className="btn-gold w-full text-[12px] font-black py-4 disabled:opacity-50 disabled:grayscale transition-all shadow-[0_15px_30px_rgba(195,163,91,0.2)]"
             >
-              {joined && !gameState ? 'Syncing...' : mode === 'join' ? 'Enter Arena' : 'Initialize Table'}
+              <div className="absolute inset-x-0 top-0 h-[1px] bg-white/40 opacity-50" />
+              <span className="relative z-10 tracking-[0.3em] uppercase drop-shadow-md">
+                {joined && !gameState ? 'ESTABLISHING LINK...' : mode === 'join' ? 'ENTER ARENA' : 'INITIALIZE TABLE'}
+              </span>
             </button>
           </motion.form>
           

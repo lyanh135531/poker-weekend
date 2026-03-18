@@ -23,7 +23,7 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
 
   // Push corners out slightly to better utilize rectangular screen space
   // Math.abs(Math.sin(2 * angle)) is 1 at diagonals (45°, 135°, etc.) and 0 at axes
-  const cornerPush = Math.abs(Math.sin(2 * angle)) * 5; // +3% radius at corners
+  const cornerPush = Math.abs(Math.sin(2 * angle)) * 4; // +3% radius at corners
 
   const effectiveXRadius = xRadius + cornerPush;
   const effectiveYRadius = yRadius + cornerPush;
@@ -31,15 +31,16 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
   const left = 50 + effectiveXRadius * Math.cos(angle);
   const top = 50 + effectiveYRadius * Math.sin(angle);
 
-  // Card inward offset - slightly tighter
-  const cardOffset = 12;
+  // Card inward offset - pulled much closer to player
+  // Main player needs more distance because their cards are larger and face up
+  const cardOffset = isMe ? 14 : 8;
   const cardLeft = 50 + (effectiveXRadius - cardOffset) * Math.cos(angle);
   const cardTop = 50 + (effectiveYRadius - cardOffset) * Math.sin(angle);
 
-  // Bet inward offset - pulled closer to the player plate
-  const betOffset = 22;
-  const betLeft = 48 + (effectiveXRadius - betOffset) * Math.cos(angle);
-  const betTop = 48 + (effectiveYRadius - betOffset) * Math.sin(angle);
+  // Bet inward offset - pulled right next to the cards
+  const betOffset = isMe ? 20 : 13;
+  const betLeft = 50 + (effectiveXRadius - betOffset) * Math.cos(angle);
+  const betTop = 50 + (effectiveYRadius - betOffset) * Math.sin(angle);
 
   return (
     <>
@@ -107,7 +108,7 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
       >
         <div className={`relative p-1 rounded-full transition-all duration-500 scale-110 ${player.isTurn ? 'animate-turn-glow' : ''}`}>
           {/* Status Badges */}
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex flex-col gap-0.5 z-[60] items-center">
+          <div className="absolute -top-6 left-1/2 -translate-x-1/2 flex flex-col gap-0.5 z-[60] items-center">
             {player.isTurn && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}

@@ -19,8 +19,19 @@
 
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-200 overflow-hidden font-sans antialiased;
-    background: radial-gradient(circle at center, #1a1f2e 0%, #05070a 100%);
+    @apply text-slate-200 overflow-hidden font-sans antialiased;
+    background-color: #030712;
+    background-image: 
+      radial-gradient(circle at 15% 50%, rgba(195, 163, 91, 0.1), transparent 25%),
+      radial-gradient(circle at 85% 30%, rgba(195, 163, 91, 0.05), transparent 25%),
+      radial-gradient(circle at 50% 100%, rgba(30, 41, 59, 0.5), transparent 50%);
+    background-size: 150% 150%;
+    animation: bg-shift 15s ease-in-out infinite alternate;
+  }
+  
+  @keyframes bg-shift {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 100% 100%; }
   }
 
   /* Hide number input spin buttons */
@@ -47,16 +58,22 @@
 }
 
 .glass-ui-gold {
-    @apply backdrop-blur-3xl bg-slate-950/60 border border-poker-gold/20 shadow-[0_0_50px_rgba(0,0,0,0.8)];
+    @apply backdrop-blur-[40px] bg-slate-950/40 rounded-3xl relative;
+    border: 1px solid rgba(195, 163, 91, 0.15);
+    box-shadow: 
+      0 25px 50px -12px rgba(0, 0, 0, 0.8),
+      0 0 0 1px rgba(255, 255, 255, 0.02) inset,
+      0 -1px 0 0 rgba(195, 163, 91, 0.2) inset,
+      0 0 60px rgba(195, 163, 91, 0.1);
   }
 
   /* Professional Components - Minimized */
   .input-premium {
-    @apply w-full bg-slate-950/80 border border-white/5 rounded-xl px-4 py-3 focus:border-poker-gold/40 focus:bg-slate-900 outline-none transition-all text-white placeholder:text-slate-800 text-sm font-medium tracking-tight;
+    @apply w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-4 focus:border-poker-gold/50 focus:bg-slate-950/90 focus:shadow-[0_0_20px_rgba(195,163,91,0.15)] focus:ring-1 focus:ring-poker-gold/30 outline-none transition-all duration-300 text-white placeholder:text-white/20 text-sm font-black tracking-[0.2em] backdrop-blur-md text-center uppercase;
   }
 
   .input-premium-small {
-    @apply w-full bg-slate-950/80 border border-white/5 rounded-lg px-3 py-2 focus:border-poker-gold/40 focus:bg-slate-900 outline-none transition-all text-white placeholder:text-slate-800 text-[11px] font-medium tracking-tight;
+    @apply w-full bg-slate-950/60 border border-white/10 rounded-lg px-3 py-3 focus:border-poker-gold/50 focus:bg-slate-950/90 focus:shadow-[0_0_15px_rgba(195,163,91,0.1)] outline-none transition-all duration-300 text-white placeholder:text-white/20 text-[11px] font-black tracking-[0.1em] backdrop-blur-md text-center;
   }
 
   .btn-premium {
@@ -64,7 +81,31 @@
   }
 
   .btn-gold {
-    @apply btn-premium bg-poker-gold text-slate-950 hover:brightness-105 shadow-poker-gold/10;
+    @apply bg-gradient-to-br from-yellow-500 via-poker-gold to-yellow-600 text-slate-950 font-black tracking-[0.2em] shadow-[0_0_20px_rgba(195,163,91,0.3)] transition-all duration-300 relative overflow-hidden rounded-xl py-4;
+  }
+  .btn-gold:hover {
+    @apply scale-[1.02] shadow-[0_0_30px_rgba(195,163,91,0.5)];
+    filter: brightness(1.1);
+  }
+  /* Sweep shine for btn-gold */
+  .btn-gold::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -100%;
+    width: 50%;
+    height: 200%;
+    background: linear-gradient(
+      to right,
+      rgba(255,255,255,0) 0%,
+      rgba(255,255,255,0.4) 50%,
+      rgba(255,255,255,0) 100%
+    );
+    transform: rotate(30deg);
+    transition: all 0.7s ease-in-out;
+  }
+  .btn-gold:hover::after {
+    left: 200%;
   }
 
   .btn-outline {

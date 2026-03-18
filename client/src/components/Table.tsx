@@ -78,38 +78,39 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
                   } : {}}
                 >
                   <motion.div 
-                     initial={{ y: -20, opacity: 0 }}
-                     animate={{ 
-                       y: [-2, 2, -2],
-                       scale: [1, 1.01, 1],
-                       opacity: 1
-                     }}
-                     exit={{ y: -20, opacity: 0 }}
-                     transition={{ 
-                       duration: 4, 
-                       repeat: Infinity, 
-                       ease: "easeInOut" 
-                     }}
+                     initial={{ scale: 0.9, opacity: 0, y: -20 }}
+                     animate={{ scale: 1, opacity: 1, y: 0 }}
+                     exit={{ scale: 0.8, opacity: 0, y: -20 }}
+                     transition={{ type: 'spring', stiffness: 300, damping: 25 }}
                      className="flex flex-col items-center gap-1"
                   >
-                    <div className="glass-ui-luxury rounded-3xl px-8 py-3 flex flex-col items-center justify-center shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_20px_rgba(212,175,55,0.1)] border border-poker-gold/20 relative group overflow-hidden">
+                    <div className="glass-ui-luxury rounded-full px-6 py-2.5 flex items-center justify-center shadow-[0_15px_40px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.05)] border border-white/5 relative group overflow-hidden transition-all">
                       {/* Subtle Background Inner Glow */}
-                      <div className="absolute inset-0 bg-gradient-to-b from-poker-gold/10 to-transparent opacity-30 group-hover:opacity-50 transition-opacity duration-700" />
+                      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-poker-gold/10 to-transparent opacity-50" />
                       
                       <div className="flex items-center gap-3 relative z-10">
-                        <div className="bg-poker-gold/10 p-2 rounded-xl border border-poker-gold/20 shadow-inner">
-                          <Coins className="w-5 h-5 text-poker-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]" />
+                        <div className="bg-gradient-to-br from-poker-gold/20 to-poker-gold/5 p-1.5 rounded-full border border-poker-gold/20 shadow-inner">
+                          <Coins className="w-4 h-4 text-poker-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]" />
                         </div>
                         
-                        <div className="flex flex-col items-start leading-tight">
-                          <span className="text-[8px] font-black text-poker-gold/40 uppercase tracking-[0.4em] mb-0.5">
-                            {gameState.stage === 'SHOWDOWN' ? 'Winner' : 'Total Pot'}
+                        <div className="flex flex-col items-start leading-[1.1]">
+                          <span className="text-[7px] font-black text-white/40 uppercase tracking-[0.3em] mb-0.5">
+                            {gameState.stage === 'SHOWDOWN' ? 'WINNER POT' : 'TOTAL POT'}
                           </span>
-                          <div className="flex items-center gap-1">
-                            <span className="text-poker-gold text-sm font-black opacity-40">$</span>
-                            <span className="text-2xl font-black text-white tabular-nums tracking-tighter drop-shadow-lg">
-                              {gameState.stage === 'SHOWDOWN' && gameState.lastWinner ? gameState.lastWinner.amount.toLocaleString() : gameState.pot.toLocaleString()}
-                            </span>
+                          <div className="flex items-center gap-0.5">
+                            <span className="text-poker-gold text-[10px] font-black opacity-60 mt-0.5">$</span>
+                            <AnimatePresence mode="popLayout">
+                              <motion.span 
+                                key={gameState.stage === 'SHOWDOWN' && gameState.lastWinner ? gameState.lastWinner.amount : gameState.pot}
+                                initial={{ scale: 0.5, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 1.5, opacity: 0 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                                className="inline-block text-xl font-black text-white tabular-nums tracking-tighter drop-shadow-md"
+                              >
+                                {gameState.stage === 'SHOWDOWN' && gameState.lastWinner ? gameState.lastWinner.amount.toLocaleString() : gameState.pot.toLocaleString()}
+                              </motion.span>
+                            </AnimatePresence>
                           </div>
                         </div>
                       </div>
