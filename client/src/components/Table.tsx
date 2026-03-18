@@ -260,10 +260,11 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
               totalSeats={10}
               isMe={player.id === myId}
               isDealer={player.isDealer}
-              stage={gameState.stage}
-              winningCards={gameState.lastWinner?.cards}
-              isFoldVictory={gameState.lastWinner?.handName === 'Fold Victory'}
-            />
+            stage={gameState.stage}
+            winningCards={gameState.lastWinner?.cards}
+            isFoldVictory={gameState.lastWinner?.handName === 'Fold Victory'}
+            turnExpiresAt={gameState.turnExpiresAt}
+          />
           ))}
         </div>
       </div>

@@ -15,7 +15,7 @@ interface PlayerProps {
   isFoldVictory?: boolean;
 }
 
-const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, isDealer, stage, winningCards, isFoldVictory }) => {
+const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({ player, seatIndex, totalSeats, isMe, isDealer, stage, winningCards, isFoldVictory, turnExpiresAt }) => {
   // Fixed HTML Edge mapping ([left%, top%])
   // Traces the exact perimeter of the CSS Table Base
   const SEAT_MAP: Record<number, { left: number; top: number }> = {
@@ -43,8 +43,27 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
   const unitX = dx / distance;
   const unitY = dy / distance;
 
-  // Angle for rotation (if needed anywhere else, though cards just rotate fixed right now)
-  const angle = Math.atan2(top - 50, left - 50);
+  // Timer logic
+  const [timeLeft, setTimeLeft] = React.useState(0);
+  const totalTime = 60000; // 1 minute from server
+
+  React.useEffect(() => {
+    if (!player.isTurn || !turnExpiresAt) return;
+    
+    const update = () => {
+      const remaining = Math.max(0, turnExpiresAt - Date.now());
+      setTimeLeft(remaining);
+      if (remaining > 0) {
+        requestAnimationFrame(update);
+      }
+    };
+    
+    // Initial call
+    update();
+  }, [player.isTurn, turnExpiresAt]);
+
+  const progress = timeLeft / totalTime;
+  const isEmergency = timeLeft < 10000;
 
   // Offsets in EXACT pixels, eliminating aspect ratio stretching
   // Main player needs more distance because their cards are larger
@@ -122,27 +141,39 @@ const Player: React.FC<PlayerProps> = ({ player, seatIndex, totalSeats, isMe, is
         {/* Avatar - Centered directly on edge */}
         <div className="absolute" style={{ transform: 'translate(-50%, -50%)' }}>
           
-          {/* The WOW Radial Laser Timer - Points exactly towards the center! */}
-          {player.isTurn && (
-            <div 
-              className="absolute top-1/2 left-1/2 z-0 pointer-events-none"
-              style={{ 
-                transform: `rotate(${Math.atan2(unitY, unitX) * (180 / Math.PI)}deg)`,
-              }}
-            >
-              {/* Laser beam starting just outside the avatar ring (25px offset) and extending 70px towards center */}
-              <div className="absolute top-[-1px] left-[25px] h-[3px] w-[70px] bg-white/10 rounded-full overflow-hidden">
-                <motion.div
-                  className="h-full bg-poker-gold shadow-[0_0_15px_var(--poker-gold)]"
-                  initial={{ width: "100%" }}
-                  animate={{ width: "0%" }}
-                  transition={{ duration: 60, ease: "linear" }}
-                />
-              </div>
-            </div>
-          )}
-
           <div className={`relative p-1 rounded-full transition-all duration-500 scale-110 ${player.isTurn ? 'animate-turn-glow' : ''}`}>
+            
+            {/* The Unified Circular Timer - Premium SVG Implementation */}
+            {player.isTurn && (
+              <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none z-0" viewBox="0 0 100 100">
+                {/* Track */}
+                <circle 
+                  cx="50" cy="50" r="46" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="8" 
+                  className="text-white/10" 
+                />
+                {/* Progress */}
+                <motion.circle 
+                  cx="50" cy="50" r="46" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="8" 
+                  strokeDasharray="289"
+                  initial={{ pathLength: 1 }}
+                  animate={{ pathLength: progress }}
+                  strokeLinecap="round"
+                  className={isEmergency ? 'text-red-500' : 'text-poker-gold'}
+                  style={{ 
+                    filter: `drop-shadow(0 0 12px ${isEmergency ? 'rgba(239, 68, 68, 0.6)' : 'rgba(195, 163, 91, 0.6)'})`,
+                    stroke: isEmergency ? '#ef4444' : '#c3a35b'
+                  }}
+                  transition={{ duration: 0.1, ease: "linear" }}
+                />
+              </svg>
+            )}
+
             {/* Status Badges */}
             <div className="absolute -top-6 left-1/2 -translate-x-1/2 flex flex-col gap-0.5 z-[60] items-center">
               {player.isAllIn && (
