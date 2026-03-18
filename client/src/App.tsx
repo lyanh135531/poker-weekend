@@ -348,7 +348,27 @@ const BetSlider: React.FC<{
   );
 };
 
-const ActionBar: React.FC<any> = ({ player, gameState, onAction }) => {
+const Timer = ({ expiresAt }: { expiresAt: number }) => {
+  const [timeLeft, setTimeLeft] = React.useState(Math.max(0, Math.floor((expiresAt - Date.now()) / 1000)));
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(Math.max(0, Math.floor((expiresAt - Date.now()) / 1000)));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [expiresAt]);
+
+  const color = timeLeft < 10 ? 'text-red-500' : 'text-poker-gold';
+
+  return (
+    <div className={`flex items-center gap-2 font-black ${color}`}>
+      <div className={`w-2 h-2 rounded-full bg-current animate-pulse`} />
+      <span className="text-sm tracking-tighter">{timeLeft}s</span>
+    </div>
+  );
+};
+
+const ActionBar = ({ player, gameState, onAction }: { player: any, gameState: any, onAction: (type: string, amount?: number) => void }) => {
     // Only show if it's the local player's turn
     if (!player || !player.isTurn) return null;
 
@@ -379,6 +399,10 @@ const ActionBar: React.FC<any> = ({ player, gameState, onAction }) => {
             animate={{ y: 0, opacity: 1 }}
             className="glass-ui-gold p-3 rounded-2xl flex flex-col gap-3 w-56 shadow-[0_20px_40px_rgba(0,0,0,0.6)] border border-white/5"
         >
+            <div className="flex justify-between items-center px-1">
+              <span className="text-[10px] text-white/40 uppercase font-black">Your Action</span>
+              {gameState.turnExpiresAt && <Timer expiresAt={gameState.turnExpiresAt} />}
+            </div>
             {/* Betting Controls */}
             {sliderMax > callAmount && (
               <BetSlider 

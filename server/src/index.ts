@@ -28,7 +28,10 @@ const engines: Record<string, PokerEngine> = {};
 
 async function saveGameState(roomId: string, engine: PokerEngine) {
     const state = engine.getState();
-    await redisClient.set(`room:${roomId}`, JSON.stringify(state));
+    // Expire in 24 hours (86400 seconds)
+    await redisClient.set(`room:${roomId}`, JSON.stringify(state), {
+        EX: 86400 
+    });
 }
 
 async function loadGameState(roomId: string): Promise<PokerEngine | null> {
@@ -139,6 +142,26 @@ async function startServer() {
       console.log(`User disconnected: ${socket.id}`);
     });
   });
+
+  // Turn Timer Heartbeat (Checks every second)
+  setInterval(async () => {
+    const now = Date.now();
+    for (const roomId in engines) {
+      const engine = engines[roomId];
+      const state = engine.getState();
+      
+      if (state.turnExpiresAt && now > state.turnExpiresAt) {
+        const currentPlayer = state.players[state.currentTurnIndex];
+        if (currentPlayer) {
+          console.log(`Auto-fold player ${currentPlayer.name} in room ${roomId} (Timeout)`);
+          if (engine.action(currentPlayer.id, 'fold')) {
+            io.to(roomId).emit('game_update', engine.getState());
+            await saveGameState(roomId, engine);
+          }
+        }
+      }
+    }
+  }, 1000);
 
   httpServer.listen(port, () => {
     console.log(`Server running on port ${port}`);

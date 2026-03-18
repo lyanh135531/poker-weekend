@@ -46,4 +46,5 @@ export interface GameState {
     handName: string;
     cards: string[];
   } | null;
+  turnExpiresAt?: number; // timestamp in ms
 }

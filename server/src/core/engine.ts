@@ -55,25 +55,46 @@ export class PokerEngine {
     const playerIndex = this.state.players.findIndex(p => p.id === id);
     if (playerIndex === -1) return;
 
-    // Handle index shifting if game is active
-    if (this.state.stage !== GameStage.WAITING) {
-      // If the player leaving was the current turn, move to next
+    const player = this.state.players[playerIndex];
+
+    // Mark as folded logically if game is active so they don't block anything
+    if (this.state.stage !== GameStage.WAITING && !player.isFolded) {
+      player.isFolded = true;
+      // If it's their turn, move it immediately
       if (this.state.currentTurnIndex === playerIndex) {
         this.nextTurn();
-      } else if (this.state.currentTurnIndex > playerIndex) {
-        // Shift turn index back because the array will shrink
+      }
+    }
+
+    // Handle index shifting for turn and dealer before removal
+    if (this.state.stage !== GameStage.WAITING) {
+      // Fix: If nextTurn() was called, currentTurnIndex might already be ahead
+      if (this.state.currentTurnIndex > playerIndex) {
         this.state.currentTurnIndex--;
       }
 
-      // Shift dealer index back if needed
-      if (this.state.dealerIndex >= playerIndex && this.state.dealerIndex > 0) {
+      // Shift dealer index accurately
+      if (this.state.dealerIndex === playerIndex) {
+        // Dealer left - if it was the last person, wrap to 0, 
+        // otherwise it stays at playerIndex which will be the next person after splice
+        if (this.state.dealerIndex === this.state.players.length - 1) {
+          this.state.dealerIndex = 0;
+        }
+      } else if (this.state.dealerIndex > playerIndex) {
         this.state.dealerIndex--;
+      }
+
+      // Shift last raiser index
+      if (this.state.lastRaiserIndex === playerIndex) {
+        this.state.lastRaiserIndex = null;
+      } else if (this.state.lastRaiserIndex !== null && this.state.lastRaiserIndex > playerIndex) {
+        this.state.lastRaiserIndex--;
       }
     }
 
     this.state.players.splice(playerIndex, 1);
 
-    // Cancel game if too few players
+    // Cancel game if too few players left
     if (this.state.players.length < 2 && this.state.stage !== GameStage.WAITING) {
       this.state.stage = GameStage.WAITING;
       this.state.communityCards = [];
@@ -90,11 +111,6 @@ export class PokerEngine {
 
   startGame() {
     if (this.state.players.length < 2) return false;
-
-    // Rotate dealer role clockwise if starting a subsequent hand
-    if (this.state.stage === GameStage.SHOWDOWN || this.state.lastWinner) {
-      this.state.dealerIndex = (this.state.dealerIndex + 1) % this.state.players.length;
-    }
 
     this.deck.reset();
     this.deck.shuffle();
@@ -136,6 +152,7 @@ export class PokerEngine {
     this.state.lastRaiserIndex = bbIndex;
     this.state.currentTurnIndex = utgIndex;
     
+    this.resetTurnTimer();
     this.updateTurns();
     return true;
   }
@@ -203,6 +220,14 @@ export class PokerEngine {
     return true;
   }
 
+  private resetTurnTimer() {
+    if (this.state.stage !== GameStage.WAITING && this.state.stage !== GameStage.SHOWDOWN) {
+      this.state.turnExpiresAt = Date.now() + 60000; // 1 minute from now
+    } else {
+      this.state.turnExpiresAt = undefined;
+    }
+  }
+
   private nextTurn() {
     const activePlayers = this.state.players.filter(p => !p.isFolded);
     
@@ -222,8 +247,10 @@ export class PokerEngine {
         this.state.currentTurnIndex = (this.state.currentTurnIndex + 1) % this.state.players.length;
         if (this.state.players[this.state.currentTurnIndex].isFolded) {
             this.nextTurn();
+            return; // Important: nextTurn is recursive, we don't want to reset timer twice
         }
     }
+    this.resetTurnTimer();
     this.updateTurns();
   }
 
@@ -315,6 +342,13 @@ export class PokerEngine {
     this.state.pot = 0;
     this.state.stage = GameStage.SHOWDOWN;
     this.state.currentTurnIndex = -1; // No one's turn during showdown
+    this.state.turnExpiresAt = undefined;
+
+    // Rotate dealer for the NEXT hand right now
+    if (this.state.players.length > 0) {
+      this.state.dealerIndex = (this.state.dealerIndex + 1) % this.state.players.length;
+    }
+
     this.updateTurns();
   }
 
