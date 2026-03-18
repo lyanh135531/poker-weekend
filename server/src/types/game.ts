@@ -24,8 +24,16 @@ export interface Player {
   isDealer: boolean;
 }
 
+export interface GameConfig {
+  buyIn: number;
+  smallBlind: number;
+  bigBlind: number;
+  raiseLimit?: number; // 0 or undefined for no limit (No Limit Hold'em)
+}
+
 export interface GameState {
   roomId: string;
+  config: GameConfig;
   players: Player[];
   pot: number;
   communityCards: string[];

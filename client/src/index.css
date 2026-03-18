@@ -22,6 +22,18 @@
     @apply bg-slate-950 text-slate-200 overflow-hidden font-sans antialiased;
     background: radial-gradient(circle at center, #1a1f2e 0%, #05070a 100%);
   }
+
+  /* Hide number input spin buttons */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
 }
 
 @layer components {
@@ -41,6 +53,10 @@
   /* Professional Components */
   .input-premium {
     @apply w-full bg-slate-950/80 border-2 border-white/5 rounded-2xl px-6 py-4 focus:border-poker-gold/50 focus:bg-slate-900 outline-none transition-all text-white placeholder:text-slate-700 text-lg font-bold;
+  }
+
+  .input-premium-small {
+    @apply w-full bg-slate-950/80 border border-white/10 rounded-xl px-4 py-2.5 focus:border-poker-gold/50 focus:bg-slate-900 outline-none transition-all text-white placeholder:text-slate-700 text-sm font-bold;
   }
 
   .btn-premium {

@@ -1,22 +1,28 @@
 import { Card, Deck } from './deck';
-import { GameStage, Player, GameState } from '../types/game';
+import { GameStage, Player, GameState, GameConfig } from '../types/game';
 import { HandEvaluator } from './evaluator';
 
 export class PokerEngine {
   private state: GameState;
   private deck: Deck;
 
-  constructor(roomId: string) {
+  constructor(roomId: string, config?: GameConfig) {
     this.deck = new Deck();
+    const defaultConfig: GameConfig = {
+      buyIn: 1000,
+      smallBlind: 10,
+      bigBlind: 20
+    };
     this.state = {
       roomId,
+      config: config || defaultConfig,
       players: [],
       pot: 0,
       communityCards: [],
       stage: GameStage.WAITING,
       dealerIndex: 0,
       currentTurnIndex: 0,
-      minRaise: 20,
+      minRaise: (config || defaultConfig).bigBlind,
       lastRaiserIndex: null
     };
   }
@@ -27,7 +33,7 @@ export class PokerEngine {
     if (this.state.players.length >= 10) return false;
     
     // Persist chips by name if they were here before
-    const chips = this.playerStats[name] !== undefined ? this.playerStats[name] : 1000;
+    const chips = this.playerStats[name] !== undefined ? this.playerStats[name] : this.state.config.buyIn;
     
     this.state.players.push({
       id,
@@ -96,7 +102,7 @@ export class PokerEngine {
     this.state.stage = GameStage.PRE_FLOP;
     this.state.communityCards = [];
     this.state.pot = 0;
-    this.state.minRaise = 20; // Default BB
+    this.state.minRaise = this.state.config.bigBlind;
     this.state.lastRaiserIndex = null;
     this.state.lastWinner = null;
 
@@ -123,8 +129,8 @@ export class PokerEngine {
       utgIndex = (this.state.dealerIndex + 3) % n;
     }
     
-    this.handleBet(this.state.players[sbIndex].id, 10);
-    this.handleBet(this.state.players[bbIndex].id, 20);
+    this.handleBet(this.state.players[sbIndex].id, this.state.config.smallBlind);
+    this.handleBet(this.state.players[bbIndex].id, this.state.config.bigBlind);
 
     // Pre-flop: the Big Blind is technically the last raiser (forced)
     this.state.lastRaiserIndex = bbIndex;
@@ -163,7 +169,16 @@ export class PokerEngine {
         break;
       case 'raise':
         // World rules: Raise must be at least minRaise
-        const totalRaiseTo = currentMaxBet + Math.max(amount, this.state.minRaise);
+        const raiseAmount = Math.max(amount, this.state.minRaise);
+        
+        // Enforce Raise Limit if configured
+        if (this.state.config.raiseLimit && this.state.config.raiseLimit > 0) {
+          if (raiseAmount > this.state.config.raiseLimit) {
+            return false; // Exceeds limit
+          }
+        }
+
+        const totalRaiseTo = currentMaxBet + raiseAmount;
         const addedChips = totalRaiseTo - player.bet;
         if (this.handleBet(playerId, addedChips)) {
             this.state.minRaise = Math.max(amount, this.state.minRaise);
@@ -218,7 +233,7 @@ export class PokerEngine {
         p.bet = 0;
         p.hasActed = false;
     });
-    this.state.minRaise = 20; // Reset minRaise to BB
+    this.state.minRaise = this.state.config.bigBlind;
     this.state.lastRaiserIndex = null;
 
     switch (this.state.stage) {

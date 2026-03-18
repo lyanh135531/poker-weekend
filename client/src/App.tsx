@@ -14,6 +14,14 @@ function App() {
   const [name, setName] = useState('');
   const [roomId, setRoomId] = useState('');
   const [joined, setJoined] = useState(false);
+  const [mode, setMode] = useState<'join' | 'create'>('join');
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  
+  // Advanced Config State
+  const [buyIn, setBuyIn] = useState(1000);
+  const [smallBlind, setSmallBlind] = useState(10);
+  const [bigBlind, setBigBlind] = useState(20);
+  const [raiseLimit, setRaiseLimit] = useState(0);
 
   useEffect(() => {
     const newSocket = io(SERVER_URL);
@@ -32,6 +40,21 @@ function App() {
     e.preventDefault();
     if (!name || !roomId) return;
     socket?.emit('join_room', { roomId, name });
+    setJoined(true);
+  };
+
+  const handleCreate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !roomId) return;
+    
+    const config = {
+      buyIn,
+      smallBlind,
+      bigBlind,
+      raiseLimit: raiseLimit > 0 ? raiseLimit : undefined
+    };
+
+    socket?.emit('join_room', { roomId, name, config });
     setJoined(true);
   };
 
@@ -69,45 +92,128 @@ function App() {
             </div>
           </div>
 
-          <form onSubmit={handleJoin} className="space-y-8">
-            <div className="space-y-3">
-              <label className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-white/40 font-black ml-2">
-                <User className="w-3 h-3 text-poker-gold" />
-                Player Identity
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="E.g. Phil Ivey"
-                className="input-premium"
-                required
-              />
-            </div>
+          <div className="flex bg-white/5 p-1.5 rounded-2xl gap-2">
+            <button 
+              onClick={() => setMode('join')}
+              className={`flex-1 py-3 px-4 rounded-xl text-[10px] uppercase tracking-[0.2em] font-black transition-all ${mode === 'join' ? 'bg-poker-gold text-slate-950 shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+            >
+              Join Table
+            </button>
+            <button 
+              onClick={() => {
+                setMode('create');
+                generateRoomId();
+              }}
+              className={`flex-1 py-3 px-4 rounded-xl text-[10px] uppercase tracking-[0.2em] font-black transition-all ${mode === 'create' ? 'bg-poker-gold text-slate-950 shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+            >
+              Create Table
+            </button>
+          </div>
 
-            <div className="space-y-3">
-              <label className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-white/40 font-black ml-2">
-                <Users className="w-3 h-3 text-poker-gold" />
-                Table Reference
-              </label>
-              <div className="flex gap-3 h-[68px]">
+          <form onSubmit={mode === 'join' ? handleJoin : handleCreate} className="space-y-8">
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-white/40 font-black ml-2">
+                  <User className="w-3 h-3 text-poker-gold" />
+                  Player Identity
+                </label>
                 <input
                   type="text"
-                  value={roomId}
-                  onChange={(e) => setRoomId(e.target.value.toUpperCase())}
-                  placeholder="ROOM-ID"
-                  className="input-premium flex-1 font-mono uppercase tracking-widest text-center"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="E.g. Phil Ivey"
+                  className="input-premium"
                   required
                 />
-                <button
-                  type="button"
-                  onClick={generateRoomId}
-                  className="btn-outline aspect-square p-0 flex items-center justify-center"
-                  title="Generate ID"
-                >
-                  <RefreshCw className="w-5 h-5 text-poker-gold" />
-                </button>
               </div>
+
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-white/40 font-black ml-2">
+                  <Users className="w-3 h-3 text-poker-gold" />
+                  Table Reference
+                </label>
+                <div className="flex gap-3 h-[68px]">
+                  <input
+                    type="text"
+                    value={roomId}
+                    onChange={(e) => setRoomId(e.target.value.toUpperCase())}
+                    placeholder="ROOM-ID"
+                    className="input-premium flex-1 font-mono uppercase tracking-widest text-center"
+                    required
+                    readOnly={mode === 'create'}
+                  />
+                  {mode === 'join' && (
+                    <button
+                      type="button"
+                      onClick={generateRoomId}
+                      className="btn-outline aspect-square p-0 flex items-center justify-center"
+                      title="Generate ID"
+                    >
+                      <RefreshCw className="w-5 h-5 text-poker-gold" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {mode === 'create' && (
+                <div className="space-y-4 pt-2">
+                  <button 
+                    type="button"
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    className="text-[10px] uppercase tracking-[0.2em] text-poker-gold font-black flex items-center gap-2 hover:opacity-80 transition-all ml-2"
+                  >
+                    {showAdvanced ? '− Hide Advanced Config' : '+ Show Advanced Config'}
+                  </button>
+
+                  <AnimatePresence>
+                    {showAdvanced && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="grid grid-cols-2 gap-4 overflow-hidden"
+                      >
+                         <div className="space-y-2 col-span-2">
+                            <label className="text-[9px] uppercase tracking-widest text-white/30 font-black ml-1">Initial Buy-In ($)</label>
+                            <input 
+                              type="number" 
+                              value={buyIn} 
+                              onChange={(e) => setBuyIn(parseInt(e.target.value))}
+                              className="input-premium-small"
+                            />
+                         </div>
+                         <div className="space-y-2">
+                            <label className="text-[9px] uppercase tracking-widest text-white/30 font-black ml-1">Small Blind ($)</label>
+                            <input 
+                              type="number" 
+                              value={smallBlind} 
+                              onChange={(e) => setSmallBlind(parseInt(e.target.value))}
+                              className="input-premium-small"
+                            />
+                         </div>
+                         <div className="space-y-2">
+                            <label className="text-[9px] uppercase tracking-widest text-white/30 font-black ml-1">Big Blind ($)</label>
+                            <input 
+                              type="number" 
+                              value={bigBlind} 
+                              onChange={(e) => setBigBlind(parseInt(e.target.value))}
+                              className="input-premium-small"
+                            />
+                         </div>
+                         <div className="space-y-2 col-span-2">
+                            <label className="text-[9px] uppercase tracking-widest text-white/30 font-black ml-1">Max Raise ($) (0 = No Limit)</label>
+                            <input 
+                              type="number" 
+                              value={raiseLimit} 
+                              onChange={(e) => setRaiseLimit(parseInt(e.target.value))}
+                              className="input-premium-small"
+                            />
+                         </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
             </div>
 
             <button 
@@ -115,7 +221,7 @@ function App() {
               disabled={!socket?.connected}
               className="btn-gold w-full text-sm font-black pt-6 pb-6 disabled:opacity-50 disabled:grayscale transition-all"
             >
-              {joined && !gameState ? 'Syncing...' : 'Enter Arena'}
+              {joined && !gameState ? 'Syncing...' : mode === 'join' ? 'Enter Arena' : 'Initialize Table'}
             </button>
           </form>
           
@@ -254,12 +360,18 @@ const ActionBar: React.FC<any> = ({ player, gameState, onAction }) => {
     const minRaiseTotal = callAmount + minRaise;
     const maxPossbileBet = player.chips; // All-in
 
-    const [betAmount, setBetAmount] = React.useState(Math.min(maxPossbileBet, minRaiseTotal));
+    // Respect Raise Limit if configured
+    let sliderMax = maxPossbileBet;
+    if (gameState.config.raiseLimit && gameState.config.raiseLimit > 0) {
+      sliderMax = Math.min(maxPossbileBet, callAmount + gameState.config.raiseLimit);
+    }
+
+    const [betAmount, setBetAmount] = React.useState(Math.min(sliderMax, minRaiseTotal));
 
     // Sync betAmount if it falls out of bounds (e.g. after someone else raises)
     React.useEffect(() => {
-      setBetAmount(prev => Math.min(maxPossbileBet, Math.max(prev, minRaiseTotal)));
-    }, [minRaiseTotal, maxPossbileBet]);
+      setBetAmount(prev => Math.min(sliderMax, Math.max(prev, minRaiseTotal)));
+    }, [minRaiseTotal, sliderMax]);
 
     return (
         <motion.div 
@@ -268,10 +380,10 @@ const ActionBar: React.FC<any> = ({ player, gameState, onAction }) => {
             className="glass-ui-gold p-3 rounded-2xl flex flex-col gap-3 w-56 shadow-[0_20px_40px_rgba(0,0,0,0.6)] border border-white/5"
         >
             {/* Betting Controls */}
-            {maxPossbileBet > callAmount && (
+            {sliderMax > callAmount && (
               <BetSlider 
                 min={minRaiseTotal} 
-                max={maxPossbileBet} 
+                max={sliderMax} 
                 value={betAmount} 
                 onChange={setBetAmount}
                 pot={gameState.pot}

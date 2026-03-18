@@ -22,14 +22,24 @@ export interface Player {
   bet: number;
 }
 
+export interface GameConfig {
+  buyIn: number;
+  smallBlind: number;
+  bigBlind: number;
+  raiseLimit?: number;
+}
+
 export interface GameState {
   roomId: string;
+  config: GameConfig;
   players: Player[];
   pot: number;
   communityCards: string[];
   stage: GameStage | string;
   dealerIndex: number;
   currentTurnIndex: number;
+  minRaise: number;
+  lastRaiserIndex: number | null;
   lastWinner?: {
     name: string;
     amount: number;

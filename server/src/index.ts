@@ -52,11 +52,11 @@ async function startServer() {
 
     socket.on('join_room', async (data) => {
         try {
-            const { roomId, name } = data;
+            const { roomId, name, config } = data;
             console.log(`Join Room Request: ${roomId} from ${name}`);
             socket.join(roomId);
             if (!engines[roomId]) {
-                engines[roomId] = new PokerEngine(roomId);
+                engines[roomId] = new PokerEngine(roomId, config);
             }
             
             const engine = engines[roomId];
