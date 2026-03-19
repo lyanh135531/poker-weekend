@@ -44,6 +44,15 @@ services:
     networks:
       - poker-network
 
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: poker-tunnel
+    command: tunnel --url http://nginx:80
+    depends_on:
+      - nginx
+    networks:
+      - poker-network
+
   redis:
     image: redis:alpine
     container_name: poker-redis
