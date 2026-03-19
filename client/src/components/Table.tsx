@@ -92,21 +92,21 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
                     transition={{ type: 'spring', stiffness: 300, damping: 25 }}
                     className="flex flex-col items-center gap-1"
                   >
-                    <div className="glass-ui-luxury rounded-full px-6 py-2.5 flex items-center justify-center shadow-[0_15px_40px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.05)] border border-white/5 relative group overflow-hidden transition-all">
+                    <div className="glass-ui-luxury rounded-full px-4 py-1.5 sm:px-6 sm:py-2.5 flex items-center justify-center shadow-[0_15px_40px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.05)] border border-white/5 relative group overflow-hidden transition-all">
                       {/* Subtle Background Inner Glow */}
                       <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-poker-gold/10 to-transparent opacity-50" />
 
-                      <div className="flex items-center gap-3 relative z-10">
-                        <div className="bg-gradient-to-br from-poker-gold/20 to-poker-gold/5 p-1.5 rounded-full border border-poker-gold/20 shadow-inner">
-                          <Coins className="w-4 h-4 text-poker-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]" />
+                      <div className="flex items-center gap-2 sm:gap-3 relative z-10">
+                        <div className="bg-gradient-to-br from-poker-gold/20 to-poker-gold/5 p-1 sm:p-1.5 rounded-full border border-poker-gold/20 shadow-inner">
+                          <Coins className="w-3 h-3 sm:w-4 sm:h-4 text-poker-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]" />
                         </div>
 
                         <div className="flex flex-col items-start leading-[1.1]">
-                          <span className="text-[7px] font-black text-white/40 uppercase tracking-[0.3em] mb-0.5">
+                          <span className="text-[6px] sm:text-[7px] font-black text-white/40 uppercase tracking-[0.3em] mb-0.5">
                             {gameState.stage === 'SHOWDOWN' ? 'WINNER POT' : 'TOTAL POT'}
                           </span>
                           <div className="flex items-center gap-0.5">
-                            <span className="text-poker-gold text-[10px] font-black opacity-60 mt-0.5">$</span>
+                            <span className="text-poker-gold text-[9px] sm:text-[10px] font-black opacity-60 mt-0.5">$</span>
                             <AnimatePresence mode="popLayout">
                               <motion.span
                                 key={gameState.stage === 'SHOWDOWN' && gameState.lastWinner ? gameState.lastWinner.amount : gameState.pot}
@@ -114,7 +114,7 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
                                 animate={{ scale: 1, opacity: 1 }}
                                 exit={{ scale: 1.5, opacity: 0 }}
                                 transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                                className="inline-block text-xl font-black text-white tabular-nums tracking-tighter drop-shadow-md"
+                                className="inline-block text-base sm:text-lg md:text-xl font-black text-white tabular-nums tracking-tighter drop-shadow-md"
                               >
                                 {gameState.stage === 'SHOWDOWN' && gameState.lastWinner ? gameState.lastWinner.amount.toLocaleString() : gameState.pot.toLocaleString()}
                               </motion.span>
@@ -225,7 +225,8 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
             </AnimatePresence>
 
 
-            <div className="absolute top-[50%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-2">
+            {/* Community Cards - Centered & Responsive Gap */}
+            <div className="absolute top-[50%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-1 md:gap-2">
               {[0, 1, 2, 3, 4].map(idx => (
                 <div key={idx} className="card-socket relative flex items-center justify-center">
                   <AnimatePresence mode="popLayout">

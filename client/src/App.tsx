@@ -95,14 +95,14 @@ function App() {
           layout
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="glass-ui-gold p-8 rounded-[2rem] w-full max-w-md space-y-8"
+          className="glass-ui-gold p-5 sm:p-8 rounded-2xl sm:rounded-[2rem] w-full max-w-[340px] sm:max-w-md space-y-5 sm:space-y-8"
         >
           <div className="text-center space-y-3 pb-2">
             <motion.h1 
               initial={{ y: -20, opacity: 0, filter: 'blur(10px)' }}
               animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
               transition={{ duration: 1, ease: 'easeOut' }}
-              className="text-6xl font-black tracking-tighter"
+              className="text-4xl sm:text-6xl font-black tracking-tighter"
             >
               <span className="text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]">POKER</span>
               <span className="bg-gradient-to-br from-yellow-300 via-poker-gold to-yellow-700 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(195,163,91,0.6)] pr-2">WKD</span>
@@ -139,8 +139,8 @@ function App() {
             </button>
           </div>
 
-          <motion.form layout onSubmit={mode === 'join' ? handleJoin : handleCreate} className="space-y-8">
-            <div className="space-y-4">
+          <motion.form layout onSubmit={mode === 'join' ? handleJoin : handleCreate} className="space-y-5 sm:space-y-8">
+            <div className="space-y-3 sm:space-y-4">
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-[8px] uppercase tracking-[0.3em] text-white/30 font-black ml-1">
                   <User className="w-2.5 h-2.5 text-poker-gold/60" />
@@ -161,7 +161,7 @@ function App() {
                   <Users className="w-2.5 h-2.5 text-poker-gold/60" />
                   Reference
                 </label>
-                <div className="flex gap-2 h-[52px]">
+                <div className="flex gap-2 h-[42px] sm:h-[52px]">
                   <input
                     type="text"
                     value={roomId}
@@ -267,7 +267,7 @@ function App() {
             <button 
               type="submit" 
               disabled={!socket?.connected}
-              className="btn-gold w-full text-[12px] font-black py-4 disabled:opacity-50 disabled:grayscale transition-all shadow-[0_15px_30px_rgba(195,163,91,0.2)]"
+              className="btn-gold w-full text-[11px] sm:text-[12px] font-black py-3 sm:py-4 disabled:opacity-50 disabled:grayscale transition-all shadow-[0_15px_30px_rgba(195,163,91,0.2)]"
             >
               <div className="absolute inset-x-0 top-0 h-[1px] bg-white/40 opacity-50" />
               <span className="relative z-10 tracking-[0.3em] uppercase drop-shadow-md">
@@ -304,9 +304,9 @@ function App() {
 
   return (
     <div className="layout-container h-screen bg-slate-950 select-none overflow-hidden relative">
-      {/* Absolute Centered Table */}
+      {/* Absolute Centered Table - Shifted Up on Mobile */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-full h-full flex items-center justify-center pointer-events-auto">
+        <div className="w-full h-full flex items-center justify-center pointer-events-auto mobile-hud-shift">
           <Table 
             gameState={{ ...gameState, players: seatedPlayers }} 
             myId={socket?.id || ''} 
@@ -323,13 +323,14 @@ function App() {
         </div>
       </div>
 
-      {/* Floating UI Elements */}
-      <div className="absolute top-8 left-8 z-50">
+      {/* Floating UI Elements - Responsive Positioning */}
+      {/* Floating UI Elements - Safe Area Support for iOS */}
+      <div className="absolute top-0 left-0 right-0 z-50 p-safe-top px-4 md:px-8 flex items-start justify-between pointer-events-none">
         <motion.div 
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={copyRoomId}
-          className="glass-ui-gold px-4 py-2 rounded-full flex flex-col items-center justify-center border border-poker-gold/10 shadow-[0_0_20px_rgba(0,0,0,0.4)] cursor-pointer group relative overflow-hidden"
+          className="glass-ui-gold px-3 py-1.5 md:px-4 md:py-2 rounded-full flex flex-col items-center justify-center border border-poker-gold/10 shadow-[0_0_20px_rgba(0,0,0,0.4)] cursor-pointer group relative overflow-hidden pointer-events-auto"
         >
           <div className="absolute inset-0 bg-poker-gold/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           
@@ -340,7 +341,7 @@ function App() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="text-[8px] uppercase tracking-[0.2em] text-poker-gold font-black py-1.5"
+                className="text-[7px] md:text-[8px] uppercase tracking-[0.2em] text-poker-gold font-black py-1 md:py-1.5"
               >
                 Copied!
               </motion.span>
@@ -352,32 +353,32 @@ function App() {
                 exit={{ opacity: 0, y: -10 }}
                 className="flex flex-col items-center"
               >
-                <span className="text-[7px] uppercase tracking-[0.3em] text-poker-gold/50 font-black mb-0.5 ml-0.5">Reference</span>
-                <span className="text-[11px] font-black text-white/80 tracking-widest font-mono uppercase">{gameState.roomId}</span>
+                <span className="text-[6px] md:text-[7px] uppercase tracking-[0.3em] text-poker-gold/50 font-black mb-0 md:mb-0.5 ml-0.5">Reference</span>
+                <span className="text-[9px] md:text-[11px] font-black text-white/80 tracking-widest font-mono uppercase">{gameState.roomId}</span>
               </motion.div>
             )}
           </AnimatePresence>
         </motion.div>
-      </div>
 
-      <div className="absolute top-8 right-8 z-50 flex gap-4">
-        {me?.chips === 0 && (gameState.stage === GameStage.WAITING || gameState.stage === GameStage.SHOWDOWN) && (
+        <div className="flex gap-2 md:gap-4 pointer-events-auto">
+          {me?.chips === 0 && (gameState.stage === GameStage.WAITING || gameState.stage === GameStage.SHOWDOWN) && (
+            <button 
+              onClick={() => socket?.emit('top_up', { roomId: gameState.roomId })}
+              className="flex items-center gap-2 px-3 py-1.5 md:px-5 md:py-2.5 rounded-full bg-poker-gold text-slate-950 hover:brightness-105 transition-all text-[8px] md:text-[9px] uppercase tracking-[0.2em] font-black shadow-lg"
+            >
+              Top Up
+            </button>
+          )}
           <button 
-            onClick={() => socket?.emit('top_up', { roomId: gameState.roomId })}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-poker-gold text-slate-950 hover:brightness-105 transition-all text-[9px] uppercase tracking-[0.2em] font-black shadow-lg"
+            onClick={handleLeave}
+            className="flex items-center gap-2 px-3 py-1.5 md:px-5 md:py-2.5 rounded-full bg-white/5 border border-white/5 text-white/40 hover:bg-red-500/10 hover:text-red-500 transition-all text-[8px] md:text-[9px] uppercase tracking-[0.2em] font-black"
           >
-            Top Up
+            Leave
           </button>
-        )}
-        <button 
-          onClick={handleLeave}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/5 border border-white/5 text-white/40 hover:bg-red-500/10 hover:text-red-500 transition-all text-[9px] uppercase tracking-[0.2em] font-black"
-        >
-          Leave
-        </button>
+        </div>
       </div>
 
-      <div className="absolute bottom-10 right-10 z-50">
+      <div className="absolute bottom-0 left-0 right-0 md:bottom-10 md:right-10 md:left-auto z-50">
         <ActionBar 
           player={me} 
           gameState={gameState} 
@@ -405,10 +406,10 @@ const BetSlider: React.FC<{
   pot: number;
 }> = ({ min, max, value, onChange, pot }) => {
   return (
-    <div className="space-y-3 px-1">
+    <div className="space-y-2 md:space-y-3 px-1">
       <div className="flex items-center justify-between">
         <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-white/30 font-black">Bet Amount</span>
-        <span className="text-base md:text-xl font-black text-poker-gold shadow-sm">${value}</span>
+        <span className="text-sm md:text-xl font-black text-poker-gold shadow-sm">${value}</span>
       </div>
       
       <input 
@@ -420,7 +421,7 @@ const BetSlider: React.FC<{
         className="gold-slider h-1"
       />
 
-      <div className="grid grid-cols-3 gap-1.5 md:gap-2">
+      <div className="grid grid-cols-3 gap-2 md:gap-2">
         {[
           { label: 'Min', val: min },
           { label: '1/3', val: Math.min(max, Math.max(min, Math.floor(pot / 3))) },
@@ -432,7 +433,7 @@ const BetSlider: React.FC<{
           <button 
             key={i}
             onClick={() => onChange(p.val)}
-            className="bg-white/5 border border-white/5 text-[7px] md:text-[9px] font-black uppercase tracking-tighter py-1.5 md:py-2 rounded hover:bg-white/10 transition-colors"
+            className="bg-white/5 border border-white/5 text-[9px] md:text-[9px] font-black uppercase tracking-tighter py-2.5 md:py-2 rounded-lg hover:bg-white/10 transition-colors"
           >
             {p.label}
           </button>
@@ -463,7 +464,6 @@ const Timer = ({ expiresAt }: { expiresAt: number }) => {
 };
 
 const ActionBar = ({ player, gameState, onAction }: { player: any, gameState: any, onAction: (type: string, amount?: number) => void }) => {
-    // Only show if it's the local player's turn
     // Only show if it's the local player's turn and they aren't all-in
     if (!player || !player.isTurn || player.isAllIn) return null;
 
@@ -473,83 +473,133 @@ const ActionBar = ({ player, gameState, onAction }: { player: any, gameState: an
     
     // Total amount needed to raise (callAmount + minRaise)
     const minRaiseTotal = callAmount + minRaise;
-    const maxPossbileBet = player.chips; // All-in
+    const maxPossibleBet = player.chips;
 
     // Respect Raise Limit if configured
-    let sliderMax = maxPossbileBet;
+    let sliderMax = maxPossibleBet;
     if (gameState.config.raiseLimit && gameState.config.raiseLimit > 0) {
-      sliderMax = Math.min(maxPossbileBet, callAmount + gameState.config.raiseLimit);
+      sliderMax = Math.min(maxPossibleBet, callAmount + gameState.config.raiseLimit);
     }
 
-    // Safety: ensure sliderMax is at least minRaiseTotal for the slider range
-    // If we can't afford a full raise, minRaiseTotal will be capped at sliderMax anyway
+    // Safety: ensure sliderMax is at least minRaiseTotal
     const sliderMin = Math.min(sliderMax, minRaiseTotal);
 
     const [betAmount, setBetAmount] = React.useState(Math.min(sliderMax, minRaiseTotal));
+    const [isBettingOpen, setIsBettingOpen] = React.useState(false);
 
-    // Sync betAmount if it falls out of bounds (e.g. after someone else raises)
+    // Sync betAmount if it falls out of bounds
     React.useEffect(() => {
       setBetAmount(prev => Math.min(sliderMax, Math.max(prev, sliderMin)));
     }, [sliderMin, sliderMax]);
 
+    // Reset drawer when turn changes
+    React.useEffect(() => {
+      if (player.isTurn) setIsBettingOpen(false);
+    }, [player.isTurn]);
+
+    const canCheck = callAmount === 0;
+
     return (
         <motion.div 
-            initial={{ y: 20, opacity: 0 }}
+            initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="glass-ui-gold p-3 md:p-5 rounded-2xl flex flex-col gap-3 md:gap-5 w-52 md:w-80 shadow-[0_20px_50px_rgba(0,0,0,0.6)] border border-white/5"
+            className="action-bar-mobile md:block md:glass-ui-gold md:p-5 md:rounded-2xl flex flex-col gap-2 md:gap-5 md:w-80 md:shadow-[0_20px_50px_rgba(0,0,0,0.6)] md:border md:border-white/5 overflow-hidden"
         >
             <div className="flex justify-between items-center px-1">
-              <span className="text-[8px] text-white/30 uppercase font-black tracking-widest">Action Required</span>
+              <span className="text-[8px] text-white/30 uppercase font-black tracking-widest">
+                {isBettingOpen ? 'Adjust Raise' : 'Action Required'}
+              </span>
               {gameState.turnExpiresAt && <Timer expiresAt={gameState.turnExpiresAt} />}
             </div>
-            {/* Betting Controls */}
-            {sliderMax > callAmount && (
-              <BetSlider 
-                min={sliderMin} 
-                max={sliderMax} 
-                value={betAmount} 
-                onChange={setBetAmount}
-                pot={gameState.pot}
-              />
-            )}
 
-            <div className="h-[1px] bg-white/5 w-full -my-1" />
+            <AnimatePresence mode="wait">
+              {isBettingOpen ? (
+                <motion.div 
+                  key="betting"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="flex flex-col gap-3"
+                >
+                  <BetSlider 
+                    min={sliderMin} 
+                    max={sliderMax} 
+                    value={betAmount} 
+                    onChange={setBetAmount}
+                    pot={gameState.pot}
+                  />
+                  <div className="grid grid-cols-2 gap-2 pb-1">
+                    <button 
+                      onClick={() => setIsBettingOpen(false)}
+                      className="bg-white/5 text-[9px] font-black uppercase tracking-widest py-3 rounded-xl border border-white/5"
+                    >
+                      Back
+                    </button>
+                    <button 
+                      onClick={() => {
+                        onAction('raise', betAmount - maxBet);
+                        setIsBettingOpen(false);
+                      }}
+                      className="bg-poker-gold text-slate-950 text-[10px] font-black uppercase tracking-widest py-3 rounded-xl shadow-lg active:scale-95 transition-transform"
+                    >
+                      Confirm ${betAmount}
+                    </button>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="actions"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex flex-col gap-2 md:gap-4"
+                >
+                  {/* Desktop Betting Controls */}
+                  <div className="hidden md:block">
+                    {sliderMax > callAmount && (
+                      <BetSlider 
+                        min={sliderMin} 
+                        max={sliderMax} 
+                        value={betAmount} 
+                        onChange={setBetAmount}
+                        pot={gameState.pot}
+                      />
+                    )}
+                  </div>
 
-            <div className="flex flex-col gap-2">
-              <div className="flex gap-2">
-                <button 
-                    onClick={() => onAction('fold')}
-                    className="flex-1 bg-red-500/10 border border-red-500/20 text-red-500 font-black py-2.5 md:py-4 rounded-xl hover:bg-red-500 hover:text-white transition-all text-[10px] md:text-xs uppercase tracking-wider"
-                >
-                    Fold
-                </button>
-                <button 
-                    onClick={() => onAction('check')}
-                    className="flex-1 bg-white/5 border border-white/10 text-white font-black py-2.5 md:py-4 rounded-xl hover:bg-white/10 transition-all text-[10px] md:text-xs uppercase tracking-wider disabled:opacity-20"
-                    disabled={callAmount > 0}
-                >
-                    Check
-                </button>
-              </div>
-              
-              {callAmount > 0 && (
-                <button 
-                    onClick={() => onAction('call')}
-                    className="w-full bg-white text-slate-950 font-black py-3 md:py-5 rounded-xl hover:brightness-110 active:scale-[0.98] transition-all text-[10px] md:text-xs uppercase tracking-[0.2em] shadow-lg"
-                >
-                    Call ${callAmount}
-                </button>
+                  <div className="h-[1px] bg-white/5 w-full -my-1 hidden md:block" />
+
+                  <div className="grid grid-cols-3 md:grid-cols-1 gap-2 md:gap-3">
+                      <button 
+                          onClick={() => onAction('fold')}
+                          className="bg-red-500/10 border border-red-500/20 text-red-500 font-black py-3 md:py-4 rounded-xl hover:bg-red-500 hover:text-white transition-all text-[10px] md:text-xs uppercase tracking-wider"
+                      >
+                          Fold
+                      </button>
+                      
+                      <button 
+                          onClick={() => onAction(canCheck ? 'check' : 'call')}
+                          className="bg-white text-slate-950 font-black py-3 md:py-4 rounded-xl hover:brightness-110 active:scale-[0.98] transition-all text-[10px] md:text-xs uppercase tracking-wider shadow-lg disabled:opacity-20"
+                          disabled={!canCheck && callAmount > player.chips}
+                      >
+                          {canCheck ? 'Check' : `Call $${callAmount}`}
+                      </button>
+
+                      <button 
+                          onClick={() => {
+                            if (window.innerWidth < 768) {
+                              setIsBettingOpen(true);
+                            } else {
+                              onAction('raise', betAmount - maxBet);
+                            }
+                          }}
+                          className="btn-gold py-3 md:py-5 rounded-xl text-[10px] md:text-xs uppercase tracking-wider font-black active:scale-[0.98] transition-all"
+                      >
+                          {window.innerWidth < 768 ? 'Raise' : (maxBet === 0 ? `Bet $${betAmount}` : `Raise to $${betAmount}`)}
+                      </button>
+                  </div>
+                </motion.div>
               )}
-
-              <button 
-                  onClick={() => onAction('raise', betAmount - maxBet)}
-                  className="w-full btn-gold py-3 md:py-5 rounded-xl text-[10px] md:text-xs uppercase tracking-[0.2em] font-black group relative overflow-hidden"
-              >
-                  <span className="relative z-10">
-                    {maxBet === 0 ? `Bet $${betAmount}` : `Raise to $${betAmount}`}
-                  </span>
-              </button>
-            </div>
+            </AnimatePresence>
         </motion.div>
     );
 };

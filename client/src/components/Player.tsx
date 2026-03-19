@@ -76,10 +76,9 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({
     setIsMasked(false);
   }, [player.cards.join(','), stage === 'SHOWDOWN']);
 
-  // Offsets in EXACT pixels, eliminating aspect ratio stretching
-  // Main player needs more distance because their cards are larger
-  const cardOffsetPx = 90;
-  const betOffsetPx = 180;
+  // Offsets using CSS Variables for responsive scaling
+  const cardOffsetPx = 'var(--card-offset)';
+  const betOffsetPx = 'var(--bet-offset)';
 
   const infoOffsetPx = 45; // Pixel distance from Avatar center to Info Box center
 
@@ -90,8 +89,8 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({
         className={`absolute flex items-center justify-center ${isMe ? 'z-50' : 'z-10'} ${isMe && !player.isFolded && player.cards.length > 0 ? 'cursor-pointer group/cards pointer-events-auto' : ''}`}
         onClick={() => isMe && !player.isFolded && player.cards.length > 0 && setIsMasked(!isMasked)}
         style={{
-          left: `calc(${left}% + ${unitX * cardOffsetPx}px)`,
-          top: `calc(${top}% + ${unitY * cardOffsetPx}px)`,
+          left: `calc(${left}% + ${unitX} * ${cardOffsetPx})`,
+          top: `calc(${top}% + ${unitY} * ${cardOffsetPx})`,
           transform: 'translate(-50%, -50%)',
           width: 'calc(var(--card-width) * 1.5)',
           height: 'calc(var(--card-width) * 1.6)'
@@ -154,8 +153,8 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           className="absolute z-40 group/bet pointer-events-none"
           style={{
-            left: `calc(${left}% + ${unitX * betOffsetPx}px)`,
-            top: `calc(${top}% + ${unitY * betOffsetPx}px)`,
+            left: `calc(${left}% + ${unitX} * ${betOffsetPx})`,
+            top: `calc(${top}% + ${unitY} * ${betOffsetPx})`,
             transform: 'translate(-50%, -50%)'
           }}
         >
@@ -327,21 +326,21 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({
             </div>
 
             {/* Avatar Circle - Now contains Name and Chips */}
-            <div className={`w-16 h-16 rounded-full border border-white/10 overflow-hidden shadow-2xl relative bg-slate-950 transition-all duration-300 ${isMe ? 'ring-2 ring-poker-gold/50 ring-offset-2 ring-offset-slate-950' : ''} ${player.isTurn ? 'ring-2 ring-poker-gold' : ''}`}>
+            <div className={`w-[var(--player-plate-width)] h-[var(--player-plate-width)] rounded-full border border-white/10 overflow-hidden shadow-2xl relative bg-slate-950 transition-all duration-300 ${isMe ? 'ring-2 ring-poker-gold/50 ring-offset-2 ring-offset-slate-950' : ''} ${player.isTurn ? 'ring-2 ring-poker-gold' : ''}`}>
               <div className={`w-full h-full rounded-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-black outline-none transition-all duration-300 ${player.isTurn ? 'opacity-100' : 'opacity-80'}`}>
                 
                 {/* Background User Icon as a subtle watermark */}
                 <User className="absolute w-8 h-8 text-white/5 opacity-20 pointer-events-none" />
 
                 {/* Name */}
-                <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.1em] truncate max-w-[50px] mb-0.5 z-10">
+                <span className="text-[6px] md:text-[8px] font-black text-white/40 uppercase tracking-[0.1em] truncate max-w-[36px] md:max-w-[50px] mb-0 z-10">
                   {player.name}
                 </span>
 
                 {/* Chips */}
                 <div className="flex items-center justify-center z-10">
-                  <span className="text-poker-gold/50 text-[7px] mr-0.5 font-bold">$</span>
-                  <span className="text-[11px] font-black text-poker-gold tabular-nums tracking-tighter leading-none">
+                  <span className="text-poker-gold/50 text-[5px] md:text-[7px] mr-0.5 font-bold leading-none">$</span>
+                  <span className="text-[8px] md:text-[11px] font-black text-poker-gold tabular-nums tracking-tighter leading-none">
                     {player.chips.toLocaleString()}
                   </span>
                 </div>
@@ -350,8 +349,8 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({
             </div>
             {/* Dealer Marker */}
             {isDealer && (
-              <div className="absolute top-0 right-0 bg-poker-gold text-slate-950 p-1.5 rounded-full shadow-lg z-50 ring-2 ring-slate-950 scale-90">
-                <Crown className="w-3 h-3 fill-current" />
+              <div className="absolute top-[-2px] right-[-2px] bg-poker-gold text-slate-950 p-1 rounded-full shadow-lg z-50 ring-2 ring-slate-950 scale-75 md:scale-90 md:top-0 md:right-0">
+                <Crown className="w-2.5 h-2.5 md:w-3 md:h-3 fill-current" />
               </div>
             )}
           </div>
