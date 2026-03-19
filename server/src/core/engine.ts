@@ -54,7 +54,7 @@ export class PokerEngine {
       name,
       chips,
       cards: [],
-      isFolded: false,
+      isFolded: this.state.stage !== GameStage.WAITING, // Mark as sitting out if game already started
       isTurn: false,
       isAllIn: false,
       bet: 0,

@@ -49,7 +49,7 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({ player, se
 
   React.useEffect(() => {
     if (!player.isTurn || !turnExpiresAt) return;
-    
+
     const update = () => {
       const remaining = Math.max(0, turnExpiresAt - Date.now());
       setTimeLeft(remaining);
@@ -57,7 +57,7 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({ player, se
         requestAnimationFrame(update);
       }
     };
-    
+
     // Initial call
     update();
   }, [player.isTurn, turnExpiresAt]);
@@ -119,25 +119,25 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({ player, se
 
           {/* Privacy Toggle Hint (Hero Only) */}
           {isMe && !player.isFolded && player.cards.length > 0 && (
-             <div className="absolute inset-x-0 -bottom-6 flex justify-center opacity-0 group-hover/cards:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
-                <span className="bg-black/80 backdrop-blur-md px-2 py-0.5 rounded text-[8px] font-black text-poker-gold uppercase tracking-widest border border-poker-gold/20 shadow-xl">
-                   {isMasked ? 'Tap to Reveal' : 'Tap to Hide'}
-                </span>
-             </div>
+            <div className="absolute inset-x-0 -bottom-6 flex justify-center opacity-0 group-hover/cards:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+              <span className="bg-black/80 backdrop-blur-md px-2 py-0.5 rounded text-[8px] font-black text-poker-gold uppercase tracking-widest border border-poker-gold/20 shadow-xl">
+                {isMasked ? 'Tap to Reveal' : 'Tap to Hide'}
+              </span>
+            </div>
           )}
 
           {/* Private Overlay - Premium Stamp Appearance */}
           <AnimatePresence>
             {isMasked && !player.isFolded && player.cards.length > 0 && (
-              <motion.div 
-                 initial={{ opacity: 0, scale: 0.5, rotate: 0 }}
-                 animate={{ opacity: 1, scale: 1.2, rotate: -15 }}
-                 exit={{ opacity: 0, scale: 0.8 }}
-                 className="absolute inset-0 flex items-center justify-center z-[100] pointer-events-none"
+              <motion.div
+                initial={{ opacity: 0, scale: 0.5, rotate: 0 }}
+                animate={{ opacity: 1, scale: 1.2, rotate: -15 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="absolute inset-0 flex items-center justify-center z-[100] pointer-events-none"
               >
-                 <div className="glass-ui-gold px-3 py-1 rounded-sm border-poker-gold/40 shadow-2xl backdrop-blur-md">
-                    <span className="text-[10px] font-black text-poker-gold uppercase tracking-[0.3em] italic drop-shadow-md">PRIVATE</span>
-                 </div>
+                <div className="glass-ui-gold px-3 py-1 rounded-sm border-poker-gold/40 shadow-2xl backdrop-blur-md">
+                  <span className="text-[10px] font-black text-poker-gold uppercase tracking-[0.3em] italic drop-shadow-md">PRIVATE</span>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -150,10 +150,10 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({ player, se
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           className="absolute z-40"
-          style={{ 
-            left: `calc(${left}% + ${unitX * betOffsetPx}px)`, 
-            top: `calc(${top}% + ${unitY * betOffsetPx}px)`, 
-            transform: 'translate(-50%, -50%)' 
+          style={{
+            left: `calc(${left}% + ${unitX * betOffsetPx}px)`,
+            top: `calc(${top}% + ${unitY * betOffsetPx}px)`,
+            transform: 'translate(-50%, -50%)'
           }}
         >
           <div className="glass-ui-gold px-4 py-1.5 rounded-full border-poker-gold/20 shadow-[0_10px_30px_rgba(0,0,0,0.6)] border">
@@ -174,32 +174,32 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({ player, se
       >
         {/* Avatar - Centered directly on edge */}
         <div className="absolute" style={{ transform: 'translate(-50%, -50%)' }}>
-          
+
           <div className={`relative p-1 rounded-full transition-all duration-500 scale-110 ${player.isTurn ? 'animate-turn-glow' : ''}`}>
-            
+
             {/* The Unified Circular Timer - Premium SVG Implementation */}
             {player.isTurn && (
               <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none z-0" viewBox="0 0 100 100">
                 {/* Track */}
-                <circle 
-                  cx="50" cy="50" r="46" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="8" 
-                  className="text-white/10" 
+                <circle
+                  cx="50" cy="50" r="46"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  className="text-white/10"
                 />
                 {/* Progress */}
-                <motion.circle 
-                  cx="50" cy="50" r="46" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="8" 
+                <motion.circle
+                  cx="50" cy="50" r="46"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="8"
                   strokeDasharray="289"
                   initial={{ pathLength: 1 }}
                   animate={{ pathLength: progress }}
                   strokeLinecap="round"
                   className={isEmergency ? 'text-red-500' : 'text-poker-gold'}
-                  style={{ 
+                  style={{
                     filter: `drop-shadow(0 0 12px ${isEmergency ? 'rgba(239, 68, 68, 0.6)' : 'rgba(195, 163, 91, 0.6)'})`,
                     stroke: isEmergency ? '#ef4444' : '#c3a35b'
                   }}
@@ -222,7 +222,7 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({ player, se
                   </motion.div>
                 )}
               </AnimatePresence>
-              
+
               {player.isAllIn && (
                 <div className="bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full shadow-lg border border-white/10 whitespace-nowrap scale-90">
                   ALL-IN
@@ -238,7 +238,7 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({ player, se
             {/* Avatar Circle - Now contains Name and Chips */}
             <div className={`w-16 h-16 rounded-full border border-white/10 overflow-hidden shadow-2xl relative bg-slate-950 transition-all duration-300 ${isMe ? 'ring-2 ring-poker-gold/50 ring-offset-2 ring-offset-slate-950' : ''} ${player.isTurn ? 'ring-2 ring-poker-gold shadow-[0_0_25px_rgba(195,163,91,0.6)]' : ''}`}>
               <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-black outline-none transition-all duration-300 ${player.isTurn ? 'opacity-100' : 'opacity-80'}`}>
-                
+
                 {/* Background User Icon as a subtle watermark */}
                 <User className="absolute w-8 h-8 text-white/5 opacity-20 pointer-events-none" />
 
@@ -259,7 +259,7 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({ player, se
             </div>
             {/* Dealer Marker */}
             {isDealer && (
-              <div className="absolute -top-1 -right-1 bg-poker-gold text-slate-950 p-1.5 rounded-full shadow-lg z-50 ring-2 ring-slate-950 scale-90">
+              <div className="absolute top-0 right-0 bg-poker-gold text-slate-950 p-1.5 rounded-full shadow-lg z-50 ring-2 ring-slate-950 scale-90">
                 <Crown className="w-3 h-3 fill-current" />
               </div>
             )}
