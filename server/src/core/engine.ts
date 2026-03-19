@@ -34,8 +34,13 @@ export class PokerEngine {
     // Check if player already exists (re-joining)
     const existingPlayer = this.state.players.find(p => p.name === name);
     if (existingPlayer) {
+      const wasCreator = existingPlayer.id === this.state.creatorId;
       existingPlayer.id = id;
       existingPlayer.isOnline = true;
+      if (wasCreator) {
+        this.state.creatorId = id; // Update to new socket ID
+      }
+      this.updateCreator();
       return true;
     }
 
@@ -59,6 +64,7 @@ export class PokerEngine {
     });
     
     this.playerStats[name] = chips;
+    this.updateCreator();
     return true;
   }
 
@@ -80,52 +86,85 @@ export class PokerEngine {
     return actualAmount;
   }
 
-  removePlayer(id: string) {
+  removePlayer(id: string, isExplicit: boolean = false) {
     const playerIndex = this.state.players.findIndex(p => p.id === id);
     if (playerIndex === -1) return;
 
     const player = this.state.players[playerIndex];
     player.isOnline = false;
 
-    // If game is active, just leave them offline & folded
-    if (this.state.stage !== GameStage.WAITING && this.state.stage !== GameStage.SHOWDOWN) {
+    const isWaitingOrShowdown = this.state.stage === GameStage.WAITING || this.state.stage === GameStage.SHOWDOWN;
+
+    // If it's an explicit leave (button click), OR we are between hands, remove physically
+    if (isExplicit || isWaitingOrShowdown) {
       if (!player.isFolded) {
         player.isFolded = true;
         if (this.state.currentTurnIndex === playerIndex) {
           this.nextTurn();
         }
       }
-      return; 
-    }
 
-    // Otherwise, remove physically
-    this.state.players.splice(playerIndex, 1);
+      this.state.players.splice(playerIndex, 1);
 
-    // Shift dealer index correctly
-    if (this.state.dealerIndex === playerIndex) {
-        if (this.state.dealerIndex >= this.state.players.length) {
-            this.state.dealerIndex = 0;
-        }
-    } else if (this.state.dealerIndex > playerIndex) {
+      // Shift indexes correctly
+      if (this.state.dealerIndex === playerIndex) {
+        this.state.dealerIndex = this.state.players.length > 0 ? this.state.dealerIndex % this.state.players.length : 0;
+      } else if (this.state.dealerIndex > playerIndex) {
         this.state.dealerIndex--;
+      }
+      
+      if (this.state.currentTurnIndex > playerIndex) {
+        this.state.currentTurnIndex--;
+      }
+
+      // Cancel game if too few players left
+      if (this.state.players.length < 2 && this.state.stage !== GameStage.WAITING) {
+        this.state.stage = GameStage.WAITING;
+        this.state.communityCards = [];
+        this.state.pot = 0;
+        this.state.players.forEach(p => {
+          p.cards = [];
+          p.isFolded = false;
+          p.bet = 0;
+        });
+      }
+    } else {
+        // Just disconnection mid-game: mark offline and auto-fold if it's their turn
+        if (!player.isFolded && this.state.currentTurnIndex === playerIndex) {
+            player.isFolded = true;
+            this.nextTurn();
+        }
     }
 
-    // Cancel game if too few players left
-    if (this.state.players.length < 2 && this.state.stage !== GameStage.WAITING) {
-      this.state.stage = GameStage.WAITING;
-      this.state.communityCards = [];
-      this.state.pot = 0;
-      this.state.players.forEach(p => {
-        p.cards = [];
-        p.isFolded = false;
-        p.bet = 0;
-      });
-    }
-
+    this.updateCreator();
     this.updateTurns();
   }
 
+  private updateCreator() {
+    const oldCreatorId = this.state.creatorId;
+    const currentCreator = this.state.players.find(p => p.id === this.state.creatorId && p.isOnline);
+    if (currentCreator) return;
+
+    const firstOnline = this.state.players.find(p => p.isOnline);
+    if (firstOnline) {
+      this.state.creatorId = firstOnline.id;
+      if (oldCreatorId !== this.state.creatorId) {
+        console.log(`[Room ${this.state.roomId}] Host migrated to ${firstOnline.name}`);
+      }
+    }
+  }
+
+  private cleanupOfflinePlayers() {
+     for (let i = this.state.players.length - 1; i >= 0; i--) {
+        if (!this.state.players[i].isOnline) {
+            this.removePlayer(this.state.players[i].id, true);
+        }
+    }
+  }
+
   startGame(playerId: string) {
+    this.cleanupOfflinePlayers();
+
     // Only creator can start
     if (playerId !== this.state.creatorId) return false;
     
@@ -397,6 +436,8 @@ export class PokerEngine {
     this.state.stage = GameStage.SHOWDOWN;
     this.state.currentTurnIndex = -1; // No one's turn during showdown
     this.state.turnExpiresAt = undefined;
+
+    this.cleanupOfflinePlayers();
 
     // Rotate dealer for the NEXT hand right now
     if (this.state.players.length > 0) {

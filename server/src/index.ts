@@ -130,7 +130,7 @@ async function startServer() {
                 }
                 if (engines[roomId]) {
                     const engine = engines[roomId];
-                    engine.removePlayer(socket.id);
+                    engine.removePlayer(socket.id, true);
                     io.to(roomId).emit('game_update', engine.getState());
                     socket.leave(roomId);
                     await saveGameState(roomId, engine);
@@ -167,7 +167,7 @@ async function startServer() {
             for (const roomId of socket.rooms) {
                 if (engines[roomId]) {
                     const engine = engines[roomId];
-                    engine.removePlayer(socket.id);
+                    engine.removePlayer(socket.id, false);
                     io.to(roomId).emit('game_update', engine.getState());
                     await saveGameState(roomId, engine);
                 }
