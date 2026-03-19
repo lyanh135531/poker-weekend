@@ -13,9 +13,12 @@ interface PlayerProps {
   stage: string;
   winningCards?: string[];
   isFoldVictory?: boolean;
+  bigBlind?: number;
 }
 
-const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({ player, seatIndex, totalSeats, isMe, isDealer, stage, winningCards, isFoldVictory, turnExpiresAt }) => {
+const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({ 
+  player, seatIndex, totalSeats, isMe, isDealer, stage, winningCards, isFoldVictory, turnExpiresAt, bigBlind = 20 
+}) => {
   // Fixed HTML Edge mapping ([left%, top%])
   // Traces the exact perimeter of the CSS Table Base
   const SEAT_MAP: Record<number, { left: number; top: number }> = {
@@ -144,23 +147,112 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({ player, se
         </div>
       </motion.div>
 
-      {/* 2. Active Bet Badge - Independent and Clearly Visible on Felt */}
+      {/* 2. Active Bet Badge - Premium "WOW" Vertical Chip Stack */}
       {player.bet > 0 && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="absolute z-40"
+          initial={{ opacity: 0, scale: 0.5, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="absolute z-40 group/bet pointer-events-none"
           style={{
             left: `calc(${left}% + ${unitX * betOffsetPx}px)`,
             top: `calc(${top}% + ${unitY * betOffsetPx}px)`,
             transform: 'translate(-50%, -50%)'
           }}
         >
-          <div className="glass-ui-gold px-4 py-1.5 rounded-full border-poker-gold/20 shadow-[0_10px_30px_rgba(0,0,0,0.6)] border">
-            <p className="text-[9px] font-black text-poker-gold tabular-nums tracking-tighter opacity-90">
-              ${player.bet}
-            </p>
-          </div>
+          <motion.div
+            animate={{ y: [0, -4, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="relative flex items-center"
+          >
+            {/* 3D Dynamic Vertical Chip Stack */}
+            <div className="relative w-5 h-8 mr-2 overflow-visible">
+              <AnimatePresence mode="popLayout">
+                {[...Array(Math.min(Math.floor(player.bet / (bigBlind || 20)) + 1, 8))].map((_, i) => (
+                  <motion.div 
+                    key={i}
+                    layout
+                    initial={{ scale: 0, y: 10, opacity: 0 }}
+                    animate={{ scale: 1, y: i * -2.5, opacity: 1 }}
+                    exit={{ scale: 0, y: 10, opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30, delay: i * 0.05 }}
+                    className="absolute bottom-0 left-0 w-[18px] h-[18px]"
+                    style={{ zIndex: i }}
+                  >
+                    {/* Chip Body - 3D Edge/Side */}
+                    <div 
+                      className="absolute inset-x-0 h-[18px] rounded-full mt-[2px]"
+                      style={{ 
+                        background: i % 2 === 0 ? '#8e7131' : '#9ca3af',
+                        boxShadow: '0 3px 6px rgba(0,0,0,0.4)',
+                        transform: `rotate(${i * 15}deg)` // Organic rotation
+                      }}
+                    />
+                    
+                    {/* Chip Top Face */}
+                    <div 
+                      className="absolute inset-x-0 h-[18px] rounded-full border border-white/20 overflow-hidden"
+                      style={{ 
+                        background: i % 2 === 0 
+                          ? 'radial-gradient(circle at center, #c3a35b 0%, #a68948 100%)' 
+                          : 'radial-gradient(circle at center, #ffffff 0%, #d1d5db 100%)',
+                        transform: `rotate(${i * 15}deg)` // Organic rotation
+                      }}
+                    >
+                      {/* Edge Stripes (Classic Poker Chip Design) */}
+                      <div 
+                        className="absolute inset-0 opacity-40"
+                        style={{ 
+                          background: `conic-gradient(
+                            transparent 0deg 15deg, 
+                            ${i % 2 === 0 ? 'white' : '#6b7280'} 15deg 30deg, 
+                            transparent 30deg 45deg,
+                            ${i % 2 === 0 ? 'white' : '#6b7280'} 45deg 60deg,
+                            transparent 60deg 75deg,
+                            ${i % 2 === 0 ? 'white' : '#6b7280'} 75deg 90deg,
+                            transparent 90deg 105deg,
+                            ${i % 2 === 0 ? 'white' : '#6b7280'} 105deg 120deg,
+                            transparent 120deg 135deg,
+                            ${i % 2 === 0 ? 'white' : '#6b7280'} 135deg 150deg,
+                            transparent 150deg 165deg,
+                            ${i % 2 === 0 ? 'white' : '#6b7280'} 165deg 180deg,
+                            transparent 180deg 195deg,
+                            ${i % 2 === 0 ? 'white' : '#6b7280'} 195deg 210deg,
+                            transparent 210deg 225deg,
+                            ${i % 2 === 0 ? 'white' : '#6b7280'} 225deg 240deg,
+                            transparent 240deg 255deg,
+                            ${i % 2 === 0 ? 'white' : '#6b7280'} 255deg 270deg,
+                            transparent 270deg 285deg,
+                            ${i % 2 === 0 ? 'white' : '#6b7280'} 285deg 300deg,
+                            transparent 300deg 315deg,
+                            ${i % 2 === 0 ? 'white' : '#6b7280'} 315deg 330deg,
+                            transparent 330deg 345deg,
+                            ${i % 2 === 0 ? 'white' : '#6b7280'} 345deg 360deg
+                          )`
+                        }}
+                      />
+                      
+                      {/* Inner Inlay Ring */}
+                      <div className="absolute inset-[3px] rounded-full border border-black/10 opacity-30" />
+                      
+                      {/* Center Highlight */}
+                      <div className="absolute top-1 left-1 w-2 h-2 rounded-full bg-white/10 blur-[1px]" />
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+
+            {/* Amount Badge */}
+            <div className="glass-ui-gold px-4 py-1.5 rounded-full border-poker-gold/30 shadow-[0_15px_35px_rgba(0,0,0,0.8),0_0_20px_rgba(195,163,91,0.2)] border flex items-baseline gap-1 backdrop-blur-2xl">
+              <span className="text-poker-gold/60 text-[7px] font-black uppercase tracking-widest">$</span>
+              <span className="text-[11px] font-black text-white tabular-nums tracking-tighter drop-shadow-sm">
+                {player.bet.toLocaleString()}
+              </span>
+              
+              {/* Subtle pulsing glow */}
+              <div className="absolute inset-0 rounded-full bg-poker-gold/10 animate-pulse" />
+            </div>
+          </motion.div>
         </motion.div>
       )}
 
@@ -175,11 +267,11 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({ player, se
         {/* Avatar - Centered directly on edge */}
         <div className="absolute" style={{ transform: 'translate(-50%, -50%)' }}>
 
-          <div className={`relative p-1 rounded-full transition-all duration-500 scale-110 ${player.isTurn ? 'animate-turn-glow' : ''}`}>
+          <div className={`relative p-1 rounded-full transition-all duration-500 scale-110 ${player.isTurn ? 'turn-glow-circular' : ''}`}>
 
             {/* The Unified Circular Timer - Premium SVG Implementation */}
             {player.isTurn && (
-              <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none z-0" viewBox="0 0 100 100">
+              <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none z-0 overflow-visible" viewBox="0 0 100 100">
                 {/* Track */}
                 <circle
                   cx="50" cy="50" r="46"
@@ -200,7 +292,6 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({ player, se
                   strokeLinecap="round"
                   className={isEmergency ? 'text-red-500' : 'text-poker-gold'}
                   style={{
-                    filter: `drop-shadow(0 0 12px ${isEmergency ? 'rgba(239, 68, 68, 0.6)' : 'rgba(195, 163, 91, 0.6)'})`,
                     stroke: isEmergency ? '#ef4444' : '#c3a35b'
                   }}
                   transition={{ duration: 0.1, ease: "linear" }}
@@ -236,9 +327,9 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({ player, se
             </div>
 
             {/* Avatar Circle - Now contains Name and Chips */}
-            <div className={`w-16 h-16 rounded-full border border-white/10 overflow-hidden shadow-2xl relative bg-slate-950 transition-all duration-300 ${isMe ? 'ring-2 ring-poker-gold/50 ring-offset-2 ring-offset-slate-950' : ''} ${player.isTurn ? 'ring-2 ring-poker-gold shadow-[0_0_25px_rgba(195,163,91,0.6)]' : ''}`}>
-              <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-black outline-none transition-all duration-300 ${player.isTurn ? 'opacity-100' : 'opacity-80'}`}>
-
+            <div className={`w-16 h-16 rounded-full border border-white/10 overflow-hidden shadow-2xl relative bg-slate-950 transition-all duration-300 ${isMe ? 'ring-2 ring-poker-gold/50 ring-offset-2 ring-offset-slate-950' : ''} ${player.isTurn ? 'ring-2 ring-poker-gold' : ''}`}>
+              <div className={`w-full h-full rounded-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-black outline-none transition-all duration-300 ${player.isTurn ? 'opacity-100' : 'opacity-80'}`}>
+                
                 {/* Background User Icon as a subtle watermark */}
                 <User className="absolute w-8 h-8 text-white/5 opacity-20 pointer-events-none" />
 

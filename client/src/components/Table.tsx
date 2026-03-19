@@ -264,6 +264,7 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
               winningCards={gameState.lastWinner?.cards}
               isFoldVictory={gameState.lastWinner?.handName === 'Fold Victory'}
               turnExpiresAt={gameState.turnExpiresAt}
+              bigBlind={gameState.config.bigBlind}
             />
           ))}
         </div>
