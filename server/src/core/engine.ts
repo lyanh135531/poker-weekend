@@ -30,7 +30,7 @@ export class PokerEngine {
 
   private playerStats: Record<string, number> = {}; // name -> chips persistence
 
-  addPlayer(id: string, name: string) {
+  addPlayer(id: string, name: string): { success: boolean; error?: string } {
     // Check if player already exists (re-joining)
     const existingPlayer = this.state.players.find(p => p.name === name);
     if (existingPlayer) {
@@ -41,10 +41,16 @@ export class PokerEngine {
         this.state.creatorId = id; // Update to new socket ID
       }
       this.updateCreator();
-      return true;
+      return { success: true };
     }
 
-    if (this.state.players.length >= 10) return false;
+    if (this.state.players.length >= 10) {
+        return { success: false, error: 'Room is full (Max 10 players)' };
+    }
+
+    if (this.state.stage !== GameStage.WAITING) {
+        return { success: false, error: 'Game has already started. Please wait for the next hand.' };
+    }
     
     // Persist chips by name if they were here before
     const chips = this.playerStats[name] !== undefined ? this.playerStats[name] : this.state.config.buyIn;
@@ -65,7 +71,7 @@ export class PokerEngine {
     
     this.playerStats[name] = chips;
     this.updateCreator();
-    return true;
+    return { success: true };
   }
 
   handleBet(playerId: string, amount: number): number {

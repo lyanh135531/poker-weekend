@@ -98,11 +98,12 @@ async function startServer() {
             }
             
             const engine = engines[roomId];
-            if (engine.addPlayer(socket.id, name)) {
+            const joinResult = engine.addPlayer(socket.id, name);
+            if (joinResult.success) {
                 await saveGameState(roomId, engine);
                 io.to(roomId).emit('game_update', engine.getState());
             } else {
-                socket.emit('error', 'Room full or game already started');
+                socket.emit('error', joinResult.error || 'Unable to join room');
             }
         } catch (err) {
             console.error('Join Room Error:', err);
