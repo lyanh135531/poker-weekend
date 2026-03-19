@@ -222,45 +222,34 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({ player, se
               )}
             </div>
 
-            {/* Avatar Circle */}
-            <div className={`w-9 h-9 rounded-full border border-white/5 overflow-hidden shadow-xl relative bg-slate-900 transition-all duration-300 ${isMe ? 'ring-2 ring-poker-gold/50 ring-offset-2 ring-offset-slate-950' : ''} ${player.isTurn ? 'ring-2 ring-poker-gold shadow-[0_0_25px_rgba(195,163,91,0.6)]' : ''}`}>
-              <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 outline-none transition-all duration-300 ${player.isTurn ? 'opacity-100' : 'opacity-60'}`}>
-                <User className={`w-5 h-5 transition-colors duration-300 ${player.isTurn ? 'text-poker-gold drop-shadow-[0_0_8px_rgba(195,163,91,0.8)]' : 'text-slate-500/50'}`} />
+            {/* Avatar Circle - Now contains Name and Chips */}
+            <div className={`w-16 h-16 rounded-full border border-white/10 overflow-hidden shadow-2xl relative bg-slate-950 transition-all duration-300 ${isMe ? 'ring-2 ring-poker-gold/50 ring-offset-2 ring-offset-slate-950' : ''} ${player.isTurn ? 'ring-2 ring-poker-gold shadow-[0_0_25px_rgba(195,163,91,0.6)]' : ''}`}>
+              <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-black outline-none transition-all duration-300 ${player.isTurn ? 'opacity-100' : 'opacity-80'}`}>
+                
+                {/* Background User Icon as a subtle watermark */}
+                <User className="absolute w-8 h-8 text-white/5 opacity-20 pointer-events-none" />
+
+                {/* Name */}
+                <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.1em] truncate max-w-[50px] mb-0.5 z-10">
+                  {player.name}
+                </span>
+
+                {/* Chips */}
+                <div className="flex items-center justify-center z-10">
+                  <span className="text-poker-gold/50 text-[7px] mr-0.5 font-bold">$</span>
+                  <span className="text-[11px] font-black text-poker-gold tabular-nums tracking-tighter leading-none">
+                    {player.chips.toLocaleString()}
+                  </span>
+                </div>
+
               </div>
             </div>
             {/* Dealer Marker */}
             {isDealer && (
-              <div className="absolute -top-0.5 -right-0.5 bg-poker-gold text-slate-950 p-1 rounded-full shadow-lg z-50 ring-1 ring-slate-950 scale-90">
-                <Crown className="w-2.5 h-2.5 fill-current" />
+              <div className="absolute -top-1 -right-1 bg-poker-gold text-slate-950 p-1.5 rounded-full shadow-lg z-50 ring-2 ring-slate-950 scale-90">
+                <Crown className="w-3 h-3 fill-current" />
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Info Box - Translated AWAY from center */}
-        <div 
-          className="absolute"
-          style={{ 
-            transform: `translate(calc(-50% - ${unitX * infoOffsetPx}px), calc(-50% - ${unitY * infoOffsetPx}px))`,
-            width: 'var(--player-plate-width)'
-          }}
-        >
-          <div className="flex flex-col items-center drop-shadow-2xl translate-y-1">
-            {/* The Name - Floating cleanly above */}
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <span className={`w-1.5 h-1.5 rounded-full shadow-sm ${player.isTurn ? 'bg-poker-gold shadow-[0_0_8px_rgba(212,175,55,0.8)] animate-pulse' : 'bg-slate-500/50'}`} />
-              <span className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] drop-shadow-md truncate max-w-[80px]">
-                {player.name}
-              </span>
-            </div>
-
-            {/* The Chips - Big, bold, glowing, resting on an elegant line */}
-            <div className="relative w-full px-2">
-              <p className="text-[17px] font-black text-poker-gold tabular-nums tracking-tighter drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] flex items-center justify-center leading-none">
-                <span className="text-white/30 text-[10px] mr-1">$</span>
-                {player.chips.toLocaleString()}
-              </p>
-            </div>
           </div>
         </div>
       </div>
