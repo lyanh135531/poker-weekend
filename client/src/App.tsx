@@ -309,10 +309,12 @@ function App() {
         <div className="w-full h-full flex items-center justify-center pointer-events-auto">
           <Table 
             gameState={{ ...gameState, players: seatedPlayers }} 
-            myId={socket?.id} 
+            myId={socket?.id || ''} 
             onAction={(type: string, amount?: number) => {
               if (type === 'start_game') {
                 socket?.emit('start_game', { roomId: gameState.roomId });
+              } else if (type === 'reset_game') {
+                socket?.emit('reset_game', { roomId: gameState.roomId });
               } else {
                 socket?.emit('action', { roomId: gameState.roomId, type, amount });
               }
@@ -382,6 +384,8 @@ function App() {
           onAction={(type: string, amount?: number) => {
             if (type === 'start_game') {
               socket?.emit('start_game', { roomId: gameState.roomId });
+            } else if (type === 'reset_game') {
+              socket?.emit('reset_game', { roomId: gameState.roomId });
             } else {
               socket?.emit('action', { roomId: gameState.roomId, type, amount });
             }

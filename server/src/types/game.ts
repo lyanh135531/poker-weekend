@@ -24,6 +24,7 @@ export interface Player {
   isDealer: boolean;
   isAllIn: boolean;
   isOnline: boolean;
+  lastAction?: string;
 }
 
 export interface GameConfig {

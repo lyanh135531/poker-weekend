@@ -100,6 +100,20 @@ async function startServer() {
         }
     });
 
+    socket.on('reset_game', async (data) => {
+        try {
+            const { roomId } = data || {};
+            if (!roomId || !engines[roomId]) return;
+            const engine = engines[roomId];
+            if (engine.resetGame(socket.id)) {
+                await saveGameState(roomId, engine);
+                io.to(roomId).emit('game_update', engine.getState());
+            }
+        } catch (err) {
+            console.error('Reset Game Error:', err);
+        }
+    });
+
     socket.on('action', async (data) => {
         try {
             const { roomId, type, amount } = data || {};

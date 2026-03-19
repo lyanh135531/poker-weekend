@@ -208,8 +208,21 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({ player, se
               </svg>
             )}
 
-            {/* Status Badges */}
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2 flex flex-col gap-0.5 z-[60] items-center">
+            {/* Status & Action Badges */}
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 flex flex-col gap-1 z-[60] items-center">
+              <AnimatePresence>
+                {!isMe && player.lastAction && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.5 }}
+                    className={`${player.lastAction.includes('Fold') ? 'bg-red-500/90' : 'bg-poker-gold/90'} text-slate-950 text-[8px] font-black px-2 py-0.5 rounded-sm shadow-xl border border-white/20 whitespace-nowrap uppercase tracking-wider`}
+                  >
+                    {player.lastAction}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
               {player.isAllIn && (
                 <div className="bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full shadow-lg border border-white/10 whitespace-nowrap scale-90">
                   ALL-IN

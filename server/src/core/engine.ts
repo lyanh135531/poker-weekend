@@ -141,16 +141,17 @@ export class PokerEngine {
   }
 
   private updateCreator() {
-    const oldCreatorId = this.state.creatorId;
-    const currentCreator = this.state.players.find(p => p.id === this.state.creatorId && p.isOnline);
-    if (currentCreator) return;
+    // Collect all currently online players
+    const onlinePlayers = this.state.players.filter(p => p.isOnline);
+    if (onlinePlayers.length === 0) return;
 
-    const firstOnline = this.state.players.find(p => p.isOnline);
-    if (firstOnline) {
-      this.state.creatorId = firstOnline.id;
-      if (oldCreatorId !== this.state.creatorId) {
-        console.log(`[Room ${this.state.roomId}] Host migrated to ${firstOnline.name}`);
-      }
+    // Use the EARLIEST joined online player as the stable host candidate
+    // Since players array is join-order, index 0 is always the 'truest' host
+    const bestHost = onlinePlayers[0];
+    
+    if (this.state.creatorId !== bestHost.id) {
+      this.state.creatorId = bestHost.id;
+      console.log(`[Room ${this.state.roomId}] Host stable-migrated to ${bestHost.name}`);
     }
   }
 
@@ -279,6 +280,10 @@ export class PokerEngine {
     }
 
     player.hasActed = true;
+    player.lastAction = type.charAt(0).toUpperCase() + type.slice(1);
+    if (type === 'raise') {
+        player.lastAction = `Raise $${amount}`;
+    }
     this.nextTurn();
     return true;
   }
@@ -327,6 +332,7 @@ export class PokerEngine {
   private nextStage() {
     this.state.players.forEach(p => {
         p.bet = 0;
+        p.lastAction = undefined;
         if (!p.isAllIn) p.hasActed = false;
     });
     this.state.minRaise = this.state.config.bigBlind;
@@ -447,18 +453,23 @@ export class PokerEngine {
     this.updateTurns();
   }
 
-  resetForNextHand() {
+  resetGame(playerId: string) {
+    if (playerId !== this.state.creatorId) return false;
     this.state.stage = GameStage.WAITING;
     this.state.communityCards = [];
     this.state.pot = 0;
     this.state.lastWinner = null;
+    this.state.minRaise = this.state.config.bigBlind;
     this.state.players.forEach(p => {
         p.cards = [];
         p.isFolded = false;
+        p.isAllIn = false;
         p.bet = 0;
         p.hasActed = false;
+        p.lastAction = undefined;
     });
     this.updateTurns();
+    return true;
   }
 
   private updateTurns() {
