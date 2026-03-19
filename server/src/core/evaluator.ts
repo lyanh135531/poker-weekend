@@ -26,14 +26,6 @@ export class HandEvaluator {
   };
 
   static evaluate(cards: string[]): EvaluationResult {
-    const parsedCards = cards.map(c => ({
-      raw: c,
-      rank: c.slice(0, -1),
-      suit: c.slice(-2, -1) === '1' ? c.slice(-1) : c.slice(-1), // Handle 10
-      value: this.RANK_VALUES[c.slice(0, -1)]
-    })).sort((a, b) => b.value - a.value);
-
-    // Re-parse specifically for '10' which is 2 chars
     const normalizedCards = cards.map(c => {
         const suit = c.slice(-1);
         const rank = c.slice(0, -1);
@@ -42,56 +34,79 @@ export class HandEvaluator {
 
     const isFlush = this.checkFlush(normalizedCards);
     const isStraight = this.checkStraight(normalizedCards);
-    const counts = this.getCounts(normalizedCards);
+    const trips = this.getNOfAKind(normalizedCards, 3);
+    const availablePairs = this.getNOfAKind(normalizedCards, 2).filter(p => !trips.length || p !== trips[0]);
     
     if (isFlush && isStraight) {
-      // Potentially dynamic, simplified for now:
-      if (isStraight[0].value === 14) return { rank: HandRank.ROYAL_FLUSH, score: 900, name: 'Royal Flush', cards: isFlush.map(c => c.raw) };
-      return { rank: HandRank.STRAIGHT_FLUSH, score: 800 + isStraight[0].value, name: 'Straight Flush', cards: isFlush.map(c => c.raw) };
+      if (isStraight[0].value === 14) {
+          return { rank: HandRank.ROYAL_FLUSH, score: 9000000, name: 'Royal Flush', cards: isFlush.map(c => c.raw) };
+      }
+      return { rank: HandRank.STRAIGHT_FLUSH, score: 8000000 + isStraight[0].value, name: 'Straight Flush', cards: isFlush.map(c => c.raw) };
     }
 
     const quads = this.getNOfAKind(normalizedCards, 4);
     if (quads.length) {
         const quadCards = normalizedCards.filter(c => c.value === quads[0]);
         const kicker = normalizedCards.find(c => c.value !== quads[0]);
-        return { rank: HandRank.FOUR_OF_A_KIND, score: 700 + quads[0], name: 'Four of a Kind', cards: [...quadCards, kicker!].map(c => c.raw) };
+        return { rank: HandRank.FOUR_OF_A_KIND, score: 7000000 + quads[0] * 100 + (kicker?.value || 0), name: 'Four of a Kind', cards: [...quadCards, kicker!].map(c => c.raw) };
     }
 
-    const trips = this.getNOfAKind(normalizedCards, 3);
-    const pairs = this.getNOfAKind(normalizedCards, 2);
-    if (trips.length && pairs.length) {
-        const tripCards = normalizedCards.filter(c => c.value === trips[0]);
-        const pairCards = normalizedCards.filter(c => c.value === pairs[0]).slice(0, 2);
-        return { rank: HandRank.FULL_HOUSE, score: 600 + trips[0], name: 'Full House', cards: [...tripCards, ...pairCards].map(c => c.raw) };
+    // Full House: Highest trips, then highest pair (different ranks)
+    if (trips.length && (availablePairs.length || trips.length > 1)) {
+        const mainTrip = trips[0];
+        const mainPair = availablePairs.length ? availablePairs[0] : trips[1];
+
+        const tripCards = normalizedCards.filter(c => c.value === mainTrip).slice(0, 3);
+        const pairCards = normalizedCards.filter(c => c.value === mainPair).slice(0, 2);
+        
+        return { 
+          rank: HandRank.FULL_HOUSE, 
+          score: 6000000 + mainTrip * 100 + mainPair, 
+          name: 'Full House', 
+          cards: [...tripCards, ...pairCards].map(c => c.raw) 
+        };
     }
 
-    if (isFlush) return { rank: HandRank.FLUSH, score: 500 + isFlush[0].value, name: 'Flush', cards: isFlush.map(c => c.raw) };
+    if (isFlush) {
+        const flushScore = isFlush.slice(0, 5).reduce((acc, c, i) => acc + c.value * Math.pow(15, 4 - i), 5000000);
+        return { rank: HandRank.FLUSH, score: flushScore, name: 'Flush', cards: isFlush.map(c => c.raw) };
+    }
     
     if (isStraight) {
-        // Find the 5 cards that make the straight
-        return { rank: HandRank.STRAIGHT, score: 400 + isStraight[0].value, name: 'Straight', cards: isStraight.map(c => c.raw) };
+        return { rank: HandRank.STRAIGHT, score: 4000000 + isStraight[0].value, name: 'Straight', cards: isStraight.map(c => c.raw) };
     }
     
     if (trips.length) {
-        const tripCards = normalizedCards.filter(c => c.value === trips[0]);
-        const kickers = normalizedCards.filter(c => c.value !== trips[0]).slice(0, 2);
-        return { rank: HandRank.THREE_OF_A_KIND, score: 300 + trips[0], name: 'Three of a Kind', cards: [...tripCards, ...kickers].map(c => c.raw) };
+        const tripValue = trips[0];
+        const tripCards = normalizedCards.filter(c => c.value === tripValue).slice(0, 3);
+        const kickers = normalizedCards.filter(c => c.value !== tripValue).slice(0, 2);
+        const kickerScore = kickers.reduce((acc, c, i) => acc + c.value * Math.pow(15, 1 - i), 0);
+        
+        return { rank: HandRank.THREE_OF_A_KIND, score: 3000000 + tripValue * 1000 + kickerScore, name: 'Three of a Kind', cards: [...tripCards, ...kickers].map(c => c.raw) };
     }
 
-    if (pairs.length >= 2) {
-        const p1Cards = normalizedCards.filter(c => c.value === pairs[0]);
-        const p2Cards = normalizedCards.filter(c => c.value === pairs[1]);
-        const kicker = normalizedCards.find(c => c.value !== pairs[0] && c.value !== pairs[1]);
-        return { rank: HandRank.TWO_PAIR, score: 200 + pairs[0] * 10 + pairs[1], name: 'Two Pair', cards: [...p1Cards, ...p2Cards, kicker!].map(c => c.raw) };
+    if (availablePairs.length >= 2) {
+        const p1 = availablePairs[0];
+        const p2 = availablePairs[1];
+        const p1Cards = normalizedCards.filter(c => c.value === p1).slice(0, 2);
+        const p2Cards = normalizedCards.filter(c => c.value === p2).slice(0, 2);
+        const kicker = normalizedCards.find(c => c.value !== p1 && c.value !== p2);
+        
+        return { rank: HandRank.TWO_PAIR, score: 2000000 + p1 * 1000 + p2 * 15 + (kicker?.value || 0), name: 'Two Pair', cards: [...p1Cards, ...p2Cards, kicker!].map(c => c.raw) };
     }
 
-    if (pairs.length === 1) {
-        const pairCards = normalizedCards.filter(c => c.value === pairs[0]);
-        const kickers = normalizedCards.filter(c => c.value !== pairs[0]).slice(0, 3);
-        return { rank: HandRank.PAIR, score: 100 + pairs[0], name: 'Pair', cards: [...pairCards, ...kickers].map(c => c.raw) };
+    const allPairs = this.getNOfAKind(normalizedCards, 2);
+    if (allPairs.length === 1) {
+        const pairValue = allPairs[0];
+        const pairCards = normalizedCards.filter(c => c.value === pairValue).slice(0, 2);
+        const kickers = normalizedCards.filter(c => c.value !== pairValue).slice(0, 3);
+        const kickerScore = kickers.reduce((acc, c, i) => acc + c.value * Math.pow(15, 2 - i), 0);
+        
+        return { rank: HandRank.PAIR, score: 1000000 + pairValue * 10000 + kickerScore, name: 'Pair', cards: [...pairCards, ...kickers].map(c => c.raw) };
     }
 
-    return { rank: HandRank.HIGH_CARD, score: normalizedCards[0].value, name: 'High Card', cards: normalizedCards.slice(0, 5).map(c => c.raw) };
+    const highCardScore = normalizedCards.slice(0, 5).reduce((acc, c, i) => acc + c.value * Math.pow(15, 4 - i), 0);
+    return { rank: HandRank.HIGH_CARD, score: highCardScore, name: 'High Card', cards: normalizedCards.slice(0, 5).map(c => c.raw) };
   }
 
   private static checkFlush(cards: any[]) {
@@ -115,7 +130,6 @@ export class HandEvaluator {
 
     if (uniqueCards.length < 5) return null;
 
-    // Handle Ace-low straight
     const values = uniqueCards.map(c => c.value);
     if (values.includes(14) && values.includes(2) && values.includes(3) && values.includes(4) && values.includes(5)) {
         const lowStraight = [
@@ -147,7 +161,7 @@ export class HandEvaluator {
   private static getNOfAKind(cards: any[], n: number) {
     const counts = this.getCounts(cards);
     return Object.entries(counts)
-        .filter(([_, count]) => count === n)
+        .filter(([_, count]) => (count as number) >= n)
         .map(([val, _]) => parseInt(val))
         .sort((a, b) => b - a);
   }
