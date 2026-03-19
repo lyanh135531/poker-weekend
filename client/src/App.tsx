@@ -95,7 +95,7 @@ function App() {
           layout
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="glass-ui-gold p-5 sm:p-8 rounded-2xl sm:rounded-[2rem] w-full max-w-[340px] sm:max-w-md space-y-5 sm:space-y-8"
+          className="glass-ui-gold px-8 py-6 sm:p-8 rounded-2xl sm:rounded-[2rem] w-full max-w-[300px] sm:max-w-md space-y-5 sm:space-y-8"
         >
           <div className="text-center space-y-3 pb-2">
             <motion.h1 
