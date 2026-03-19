@@ -26,6 +26,7 @@ const redisClient = createClient({
 });
 
 const engines: Record<string, PokerEngine> = {};
+const cleanupTimers: Record<string, NodeJS.Timeout> = {};
 
 async function saveGameState(roomId: string, engine: PokerEngine) {
     const state = engine.getState();
@@ -46,6 +47,30 @@ async function loadGameState(roomId: string): Promise<PokerEngine | null> {
     return null;
 }
 
+function scheduleRoomCleanup(roomId: string, io: Server) {
+  // Check if room is truly empty (no active socket connections)
+  const roomSize = io.sockets.adapter.rooms.get(roomId)?.size || 0;
+  if (roomSize > 0) return;
+
+  if (cleanupTimers[roomId]) return; // Already scheduled
+
+  console.log(`[Room ${roomId}] Empty. Scheduling 1-hour cleanup.`);
+  cleanupTimers[roomId] = setTimeout(async () => {
+    console.log(`[Room ${roomId}] Inactive for 1 hour. Deleting state.`);
+    delete engines[roomId];
+    await redisClient.del(`room:${roomId}`);
+    delete cleanupTimers[roomId];
+  }, 3600000); // 1 hour
+}
+
+function cancelRoomCleanup(roomId: string) {
+  if (cleanupTimers[roomId]) {
+    console.log(`[Room ${roomId}] Activity detected. Canceling cleanup.`);
+    clearTimeout(cleanupTimers[roomId]);
+    delete cleanupTimers[roomId];
+  }
+}
+
 async function startServer() {
   await redisClient.connect();
   console.log('Connected to Redis');
@@ -58,6 +83,7 @@ async function startServer() {
             const { roomId, name, config } = data;
             console.log(`Join Room Request: ${roomId} from ${name}`);
             socket.join(roomId);
+            cancelRoomCleanup(roomId);
             if (!engines[roomId]) {
                 const savedEngine = await loadGameState(roomId);
                 if (savedEngine) {
@@ -148,6 +174,7 @@ async function startServer() {
                     io.to(roomId).emit('game_update', engine.getState());
                     socket.leave(roomId);
                     await saveGameState(roomId, engine);
+                    scheduleRoomCleanup(roomId, io);
                 }
             }
         } catch (err) {
@@ -184,6 +211,10 @@ async function startServer() {
                     engine.removePlayer(socket.id, false);
                     io.to(roomId).emit('game_update', engine.getState());
                     await saveGameState(roomId, engine);
+                    
+                    // We need a slight delay to allow the socket to leave the rooms
+                    // before checking for empty status
+                    setTimeout(() => scheduleRoomCleanup(roomId, io), 500);
                 }
             }
         } catch (err) {
