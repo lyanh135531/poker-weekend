@@ -190,6 +190,22 @@
     animation: spin 8s linear infinite;
   }
 
+  /* Premium Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(195, 163, 91, 0.2);
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(195, 163, 91, 0.5);
+  }
+
   @keyframes spin {
     from {
       transform: rotate(0deg);

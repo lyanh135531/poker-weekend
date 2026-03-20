@@ -57,81 +57,6 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(41,120,60,0.4)_0%,_transparent_70%)] opacity-60" />
 
             {/* Total Pot - Luxury Floating Badge */}
-            <AnimatePresence>
-              {gameState.stage !== 'WAITING' && (
-                <div className="absolute top-[20%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 transition-all duration-1000"
-                  style={gameState.stage === 'SHOWDOWN' && gameState.lastWinner ? {
-                    top: (() => {
-                      const winner = playersWithSeats.find(p => p.name === gameState.lastWinner?.name);
-                      if (!winner) return '20%';
-                      const SEAT_MAP: Record<number, { left: number; top: number }> = {
-                        0: { left: 50, top: 100 }, 1: { left: 15, top: 95 }, 2: { left: 0, top: 70 },
-                        3: { left: 0, top: 30 }, 4: { left: 15, top: 5 }, 5: { left: 50, top: 0 },
-                        6: { left: 85, top: 5 }, 7: { left: 100, top: 30 }, 8: { left: 100, top: 70 }, 9: { left: 85, top: 95 }
-                      };
-                      return `${SEAT_MAP[winner.seatIndex]?.top || 50}%`;
-                    })(),
-                    left: (() => {
-                      const winner = playersWithSeats.find(p => p.name === gameState.lastWinner?.name);
-                      if (!winner) return '50%';
-                      const SEAT_MAP: Record<number, { left: number; top: number }> = {
-                        0: { left: 50, top: 100 }, 1: { left: 15, top: 95 }, 2: { left: 0, top: 70 },
-                        3: { left: 0, top: 30 }, 4: { left: 15, top: 5 }, 5: { left: 50, top: 0 },
-                        6: { left: 85, top: 5 }, 7: { left: 100, top: 30 }, 8: { left: 100, top: 70 }, 9: { left: 85, top: 95 }
-                      };
-                      return `${SEAT_MAP[winner.seatIndex]?.left || 50}%`;
-                    })(),
-                    scale: 0.6,
-                    opacity: 0
-                  } : {}}
-                >
-                  <motion.div
-                    initial={{ scale: 0.9, opacity: 0, y: -20 }}
-                    animate={{ scale: 1, opacity: 1, y: 0 }}
-                    exit={{ scale: 0.8, opacity: 0, y: -20 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                    className="flex flex-col items-center gap-1"
-                  >
-                    <div className="glass-ui-luxury rounded-full px-4 py-1.5 sm:px-6 sm:py-2.5 flex items-center justify-center shadow-[0_15px_40px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.05)] border border-white/5 relative group overflow-hidden transition-all">
-                      {/* Subtle Background Inner Glow */}
-                      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-poker-gold/10 to-transparent opacity-50" />
-
-                      <div className="flex items-center gap-2 sm:gap-3 relative z-10">
-                        <div className="bg-gradient-to-br from-poker-gold/20 to-poker-gold/5 p-1 sm:p-1.5 rounded-full border border-poker-gold/20 shadow-inner">
-                          <Coins className="w-3 h-3 sm:w-4 sm:h-4 text-poker-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]" />
-                        </div>
-
-                        <div className="flex flex-col items-start leading-[1.1]">
-                          <span className="text-[6px] sm:text-[7px] font-black text-white/40 uppercase tracking-[0.3em] mb-0.5">
-                            {gameState.stage === 'SHOWDOWN' ? 'WINNER POT' : 'TOTAL POT'}
-                          </span>
-                          <div className="flex items-center gap-0.5">
-                            <span className="text-poker-gold text-[9px] sm:text-[10px] font-black opacity-60 mt-0.5">$</span>
-                            <AnimatePresence mode="popLayout">
-                              <motion.span
-                                key={gameState.stage === 'SHOWDOWN' && gameState.lastWinner ? gameState.lastWinner.amount : gameState.pot}
-                                initial={{ scale: 0.5, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                exit={{ scale: 1.5, opacity: 0 }}
-                                transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                                className="inline-block text-base sm:text-lg md:text-xl font-black text-white tabular-nums tracking-tighter drop-shadow-md"
-                              >
-                                {gameState.stage === 'SHOWDOWN' && gameState.lastWinner ? gameState.lastWinner.amount.toLocaleString() : gameState.pot.toLocaleString()}
-                              </motion.span>
-                            </AnimatePresence>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Visual Anchor/Shadow on Felt */}
-                    {gameState.stage !== 'SHOWDOWN' && (
-                      <div className="w-24 h-4 bg-black/40 blur-xl rounded-[100%] mt-2 mx-auto" />
-                    )}
-                  </motion.div>
-                </div>
-              )}
-            </AnimatePresence>
 
             {/* Integrated Waiting / Showdown Control Zone */}
             <AnimatePresence>
@@ -249,6 +174,106 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
             </div>
 
           </div>
+
+          {/* Total Pot - Luxury Floating Badge (Moved outside overflow-hidden felt) */}
+          <AnimatePresence>
+            {gameState.stage !== 'WAITING' && (
+              <div className="absolute top-[18%] sm:top-[20%] max-sm:top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 transition-all duration-1000"
+                style={gameState.stage === 'SHOWDOWN' && gameState.lastWinner ? {
+                  top: (() => {
+                    const winner = playersWithSeats.find(p => p.name === gameState.lastWinner?.name);
+                    if (!winner) return '20%';
+                    const SEAT_MAP: Record<number, { left: number; top: number }> = {
+                      0: { left: 50, top: 100 }, 1: { left: 15, top: 95 }, 2: { left: 0, top: 70 },
+                      3: { left: 0, top: 30 }, 4: { left: 15, top: 5 }, 5: { left: 50, top: 0 },
+                      6: { left: 85, top: 5 }, 7: { left: 100, top: 30 }, 8: { left: 100, top: 70 }, 9: { left: 85, top: 95 }
+                    };
+                    return `${SEAT_MAP[winner.seatIndex]?.top || 50}%`;
+                  })(),
+                  left: (() => {
+                    const winner = playersWithSeats.find(p => p.name === gameState.lastWinner?.name);
+                    if (!winner) return '50%';
+                    const SEAT_MAP: Record<number, { left: number; top: number }> = {
+                      0: { left: 50, top: 100 }, 1: { left: 15, top: 95 }, 2: { left: 0, top: 70 },
+                      3: { left: 0, top: 30 }, 4: { left: 15, top: 5 }, 5: { left: 50, top: 0 },
+                      6: { left: 85, top: 5 }, 7: { left: 100, top: 30 }, 8: { left: 100, top: 70 }, 9: { left: 85, top: 95 }
+                    };
+                    return `${SEAT_MAP[winner.seatIndex]?.left || 50}%`;
+                  })(),
+                  scale: 0.6,
+                  opacity: 0
+                } : {}}
+              >
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0, y: -20 }}
+                  animate={{ 
+                    scale: 1, 
+                    opacity: 1, 
+                    y: [0, -4, 0],
+                  }}
+                  exit={{ scale: 0.8, opacity: 0, y: -20 }}
+                  transition={{ 
+                    y: {
+                      repeat: Infinity,
+                      duration: 3,
+                      ease: "easeInOut"
+                    },
+                    type: 'spring', 
+                    stiffness: 300, 
+                    damping: 25 
+                  }}
+                  className="flex flex-col items-center gap-1"
+                >
+                  <div className="glass-ui-luxury rounded-full px-4 py-1.5 sm:px-6 sm:py-2.5 flex items-center justify-center shadow-[0_15px_40px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.05)] border border-poker-gold/30 relative group overflow-hidden transition-all scale-[0.95] sm:scale-100">
+                    {/* Pulsing Gold Layer for WOW factor */}
+                    <div className="absolute inset-0 bg-poker-gold/5 animate-pulse" />
+                    
+                    {/* Gold Inner Glow */}
+                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-poker-gold/20 to-transparent opacity-40" />
+
+                    <div className="flex items-center gap-2 sm:gap-3 relative z-10">
+                      <div className="bg-gradient-to-br from-poker-gold/30 to-poker-gold/10 p-1 sm:p-1.5 rounded-full border border-poker-gold/40 shadow-[0_0_15px_rgba(212,175,55,0.3)]">
+                        <Coins className="w-3 h-3 sm:w-4 sm:h-4 text-poker-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]" />
+                      </div>
+
+                      <div className="flex flex-col items-start leading-[1.1]">
+                        <span className="text-[5px] sm:text-[7px] font-black text-poker-gold/60 uppercase tracking-[0.4em] mb-0.5">
+                          {gameState.stage === 'SHOWDOWN' ? 'WINNER POT' : 'ACTIVE POT'}
+                        </span>
+                        <div className="flex items-center gap-0.5">
+                          <span className="text-poker-gold text-[10px] sm:text-[12px] font-black opacity-80 mt-0.5">$</span>
+                          <AnimatePresence mode="popLayout">
+                            <motion.span
+                              key={gameState.stage === 'SHOWDOWN' && gameState.lastWinner ? gameState.lastWinner.amount : gameState.pot}
+                              initial={{ scale: 0.5, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              exit={{ scale: 1.5, opacity: 0 }}
+                              transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                              className="inline-block text-sm sm:text-lg md:text-xl font-black text-white tabular-nums tracking-tighter drop-shadow-md"
+                            >
+                              {gameState.stage === 'SHOWDOWN' && gameState.lastWinner ? gameState.lastWinner.amount.toLocaleString() : gameState.pot.toLocaleString()}
+                            </motion.span>
+                          </AnimatePresence>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Sweep Highlight Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                  </div>
+
+                  {/* Visual Anchor/Shadow on Felt */}
+                  {gameState.stage !== 'SHOWDOWN' && (
+                    <motion.div 
+                      animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.4, 0.3] }}
+                      transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                      className="w-16 h-2 bg-black/60 blur-xl rounded-[100%] mt-1 mx-auto" 
+                    />
+                  )}
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* 2. Responsive Player Layer - Fixed Slot System (Now Anchored to Table HTML Edge) */}

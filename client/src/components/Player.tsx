@@ -16,8 +16,8 @@ interface PlayerProps {
   bigBlind?: number;
 }
 
-const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({ 
-  player, seatIndex, totalSeats, isMe, isDealer, stage, winningCards, isFoldVictory, turnExpiresAt, bigBlind = 20 
+const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({
+  player, seatIndex, totalSeats, isMe, isDealer, stage, winningCards, isFoldVictory, turnExpiresAt, bigBlind = 20
 }) => {
   // Fixed HTML Edge mapping ([left%, top%])
   // Traces the exact perimeter of the CSS Table Base
@@ -167,7 +167,7 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({
             <div className="relative w-5 h-8 mr-2 overflow-visible">
               <AnimatePresence mode="popLayout">
                 {[...Array(Math.min(Math.floor(player.bet / (bigBlind || 20)) + 1, 8))].map((_, i) => (
-                  <motion.div 
+                  <motion.div
                     key={i}
                     layout
                     initial={{ scale: 0, y: 10, opacity: 0 }}
@@ -178,29 +178,29 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({
                     style={{ zIndex: i }}
                   >
                     {/* Chip Body - 3D Edge/Side */}
-                    <div 
+                    <div
                       className="absolute inset-x-0 h-[18px] rounded-full mt-[2px]"
-                      style={{ 
+                      style={{
                         background: i % 2 === 0 ? '#8e7131' : '#9ca3af',
                         boxShadow: '0 3px 6px rgba(0,0,0,0.4)',
                         transform: `rotate(${i * 15}deg)` // Organic rotation
                       }}
                     />
-                    
+
                     {/* Chip Top Face */}
-                    <div 
+                    <div
                       className="absolute inset-x-0 h-[18px] rounded-full border border-white/20 overflow-hidden"
-                      style={{ 
-                        background: i % 2 === 0 
-                          ? 'radial-gradient(circle at center, #c3a35b 0%, #a68948 100%)' 
+                      style={{
+                        background: i % 2 === 0
+                          ? 'radial-gradient(circle at center, #c3a35b 0%, #a68948 100%)'
                           : 'radial-gradient(circle at center, #ffffff 0%, #d1d5db 100%)',
                         transform: `rotate(${i * 15}deg)` // Organic rotation
                       }}
                     >
                       {/* Edge Stripes (Classic Poker Chip Design) */}
-                      <div 
+                      <div
                         className="absolute inset-0 opacity-40"
-                        style={{ 
+                        style={{
                           background: `conic-gradient(
                             transparent 0deg 15deg, 
                             ${i % 2 === 0 ? 'white' : '#6b7280'} 15deg 30deg, 
@@ -229,10 +229,10 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({
                           )`
                         }}
                       />
-                      
+
                       {/* Inner Inlay Ring */}
                       <div className="absolute inset-[3px] rounded-full border border-black/10 opacity-30" />
-                      
+
                       {/* Center Highlight */}
                       <div className="absolute top-1 left-1 w-2 h-2 rounded-full bg-white/10 blur-[1px]" />
                     </div>
@@ -247,7 +247,7 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({
               <span className="text-[11px] font-black text-white tabular-nums tracking-tighter drop-shadow-sm">
                 {player.bet.toLocaleString()}
               </span>
-              
+
               {/* Subtle pulsing glow */}
               <div className="absolute inset-0 rounded-full bg-poker-gold/10 animate-pulse" />
             </div>
@@ -328,7 +328,7 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({
             {/* Avatar Circle - Now contains Name and Chips */}
             <div className={`w-[var(--player-plate-width)] h-[var(--player-plate-width)] rounded-full border border-white/10 overflow-hidden shadow-2xl relative bg-slate-950 transition-all duration-300 ${isMe ? 'ring-2 ring-poker-gold/50 ring-offset-2 ring-offset-slate-950' : ''} ${player.isTurn ? 'ring-2 ring-poker-gold' : ''}`}>
               <div className={`w-full h-full rounded-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-black outline-none transition-all duration-300 ${player.isTurn ? 'opacity-100' : 'opacity-80'}`}>
-                
+
                 {/* Background User Icon as a subtle watermark */}
                 <User className="absolute w-8 h-8 text-white/5 opacity-20 pointer-events-none" />
 
@@ -349,7 +349,7 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({
             </div>
             {/* Dealer Marker */}
             {isDealer && (
-              <div className="absolute top-[-2px] right-[-2px] bg-poker-gold text-slate-950 p-1 rounded-full shadow-lg z-50 ring-2 ring-slate-950 scale-75 md:scale-90 md:top-0 md:right-0">
+              <div className="absolute top-[-2px] right-[-1px] bg-poker-gold text-slate-950 p-1 rounded-full shadow-lg z-50 ring-2 ring-slate-950 scale-75 md:scale-90 md:top-0 md:right-0">
                 <Crown className="w-2.5 h-2.5 md:w-3 md:h-3 fill-current" />
               </div>
             )}

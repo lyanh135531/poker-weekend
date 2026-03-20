@@ -95,7 +95,7 @@ function App() {
           layout
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="glass-ui-gold px-8 py-6 sm:p-8 rounded-2xl sm:rounded-[2rem] w-full max-w-[300px] sm:max-w-md space-y-5 sm:space-y-8"
+          className="glass-ui-gold px-8 py-6 sm:p-8 rounded-2xl sm:rounded-[2rem] w-full max-w-[300px] sm:max-w-md space-y-5 sm:space-y-8 max-h-[90vh] overflow-y-auto custom-scrollbar"
         >
           <div className="text-center space-y-3 pb-2">
             <motion.h1 
@@ -126,7 +126,7 @@ function App() {
               onClick={() => setMode('join')}
               className={`flex-1 py-2 px-3 rounded-lg text-[9px] uppercase tracking-[0.2em] font-black transition-all ${mode === 'join' ? 'bg-poker-gold text-slate-950 shadow-md' : 'text-white/30 hover:text-white hover:bg-white/5'}`}
             >
-              Join Table
+              Join<span className="hidden sm:inline"> Table</span>
             </button>
             <button 
               onClick={() => {
@@ -135,7 +135,7 @@ function App() {
               }}
               className={`flex-1 py-2 px-3 rounded-lg text-[9px] uppercase tracking-[0.2em] font-black transition-all ${mode === 'create' ? 'bg-poker-gold text-slate-950 shadow-md' : 'text-white/30 hover:text-white hover:bg-white/5'}`}
             >
-              Create Table
+              Create<span className="hidden sm:inline"> Table</span>
             </button>
           </div>
 
