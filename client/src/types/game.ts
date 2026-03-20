@@ -22,6 +22,7 @@ export interface Player {
   isAllIn: boolean;
   isOnline: boolean;
   bet: number;
+  totalBet: number;
   lastAction?: string;
 }
 

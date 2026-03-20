@@ -66,7 +66,8 @@ export class PokerEngine {
       bet: 0,
       hasActed: false,
       isDealer: this.state.players.length === 0, // First player is dealer
-      isOnline: true
+      isOnline: true,
+      totalBet: 0
     });
     
     this.playerStats[name] = chips;
@@ -81,6 +82,7 @@ export class PokerEngine {
     const actualAmount = Math.min(amount, player.chips);
     player.chips -= actualAmount;
     player.bet += actualAmount;
+    player.totalBet += actualAmount;
     this.state.pot += actualAmount;
     
     if (player.chips === 0 && actualAmount > 0) {
@@ -201,6 +203,7 @@ export class PokerEngine {
         p.isFolded = false;
         p.isAllIn = false;
         p.bet = 0;
+        p.totalBet = 0;
         p.hasActed = false;
       } else {
         p.cards = [];
@@ -350,7 +353,7 @@ export class PokerEngine {
 
     if (canAct.length <= 1 && this.state.stage !== GameStage.SHOWDOWN && activePlayers.length >= 2) {
       // Just deal the rest and showdown
-      while (this.state.stage !== GameStage.SHOWDOWN) {
+      while ((this.state.stage as string) !== GameStage.SHOWDOWN) {
         const prevStage = this.state.stage;
         this.dealNextCards();
         if (this.state.stage === prevStage) break; // Infinite loop safety
@@ -409,53 +412,123 @@ export class PokerEngine {
   }
 
   resolveWinner() {
-    const activePlayers = this.state.players.filter(p => !p.isFolded);
+    const players = this.state.players;
+    const activePlayers = players.filter(p => !p.isFolded);
+    
     if (activePlayers.length === 0) return;
 
-    let winner: Player;
-    let handName = "High Card";
-    let winningCards: string[] = [];
+    // Track original contributions to calculate side pots
+    const contributions = players.map(p => ({ 
+      player: p, 
+      amount: p.totalBet 
+    }));
+
+    // Winner(s) summary for client
+    let mainWinnerName = "";
+    let totalPotWon = 0;
+    let mainHandName = "";
+    let mainWinningCards: string[] = [];
 
     if (activePlayers.length === 1) {
-        // Everyone else folded
-        winner = activePlayers[0];
-        handName = "Fold Victory";
+      // Simple case: Everyone else folded
+      const winner = activePlayers[0];
+      const pot = this.state.pot;
+      winner.chips += pot;
+      this.playerStats[winner.name] = winner.chips;
+      
+      mainWinnerName = winner.name;
+      totalPotWon = pot;
+      mainHandName = "Fold Victory";
     } else {
-        const evaluations = activePlayers.map(p => ({
-            player: p,
-            eval: HandEvaluator.evaluate([...p.cards, ...this.state.communityCards])
-        }));
+      // Complex case: Side Pots
+      const remainingPot = this.state.pot;
+      let distributedAmount = 0;
 
-        evaluations.sort((a, b) => b.eval.score - a.eval.score);
-        winner = evaluations[0].player;
-        handName = evaluations[0].eval.name;
-        winningCards = evaluations[0].eval.cards;
+      // Evaluate hands for all active players
+      const playerEvals = activePlayers.map(p => ({
+        player: p,
+        eval: HandEvaluator.evaluate([...p.cards, ...this.state.communityCards]),
+        totalBet: p.totalBet,
+        initialBet: p.totalBet
+      }));
+
+      // Distribution loop
+      while (true) {
+        const potentialWinners = playerEvals.filter(e => e.totalBet > 0);
+        if (potentialWinners.length === 0) break;
+
+        // Find the best hand among those who haven't been fully paid
+        const maxScore = Math.max(...potentialWinners.map(e => e.eval.score));
+        const winners = potentialWinners.filter(e => e.eval.score === maxScore);
+
+        // Standard rules: If only one person left in this slice, it's a return
+        const othersWithMoney = playerEvals.filter(e => e.totalBet > 0 && !winners.includes(e));
+        if (othersWithMoney.length === 0 && winners.length === 1) {
+          // This winner just gets their own remaining money back (handled by cleanup)
+          break;
+        }
+
+        // Slice iteration
+        winners.sort((a, b) => a.totalBet - b.totalBet);
+        const minWinnerBet = winners[0].totalBet;
+        let potSlice = 0;
+
+        // Deduct from ALL players (active and folded)
+        players.forEach(p => {
+            const intake = Math.min(p.totalBet, minWinnerBet);
+            potSlice += intake;
+            p.totalBet -= intake;
+            
+            // Also sync the evaluation totalBet for the loop condition
+            const evalEntry = playerEvals.find(e => e.player.id === p.id);
+            if (evalEntry) {
+              evalEntry.totalBet -= intake;
+            }
+        });
+
+        const share = Math.floor(potSlice / winners.length);
+        winners.forEach(w => {
+          w.player.chips += share;
+          this.playerStats[w.player.name] = w.player.chips;
+          
+          if (!mainWinnerName) {
+            mainWinnerName = w.player.name;
+            mainHandName = w.eval.name;
+            mainWinningCards = w.eval.cards;
+          }
+          totalPotWon += share;
+        });
+      }
+
+      // Return any leftovers (unmatched bets) to owners
+      players.forEach(p => {
+        if (p.totalBet > 0) {
+          p.chips += p.totalBet;
+          this.playerStats[p.name] = p.chips;
+        }
+      });
     }
-    
-    const potWon = this.state.pot;
-    winner.chips += potWon;
-    this.playerStats[winner.name] = winner.chips;
-    
-    // Set temporary lastWinner state for Showdown
+
     this.state.lastWinner = {
-        name: winner.name,
-        amount: potWon,
-        handName: handName,
-        cards: winningCards
+      name: mainWinnerName,
+      amount: totalPotWon,
+      handName: mainHandName,
+      cards: mainWinningCards
     };
 
     this.state.pot = 0;
     this.state.stage = GameStage.SHOWDOWN;
-    this.state.currentTurnIndex = -1; // No one's turn during showdown
+    this.state.currentTurnIndex = -1;
     this.state.turnExpiresAt = undefined;
 
     this.cleanupOfflinePlayers();
 
-    // Rotate dealer for the NEXT hand right now
     if (this.state.players.length > 0) {
       this.state.dealerIndex = (this.state.dealerIndex + 1) % this.state.players.length;
     }
 
+    // Reset total bets for all players after distribution
+    this.state.players.forEach(p => p.totalBet = 0);
     this.updateTurns();
   }
 
@@ -471,6 +544,7 @@ export class PokerEngine {
         p.isFolded = false;
         p.isAllIn = false;
         p.bet = 0;
+        p.totalBet = 0;
         p.hasActed = false;
         p.lastAction = undefined;
     });
