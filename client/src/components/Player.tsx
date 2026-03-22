@@ -28,19 +28,17 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({
   turnExpiresAt,
   bigBlind = 20,
 }) => {
-  // Fixed HTML Edge mapping ([left%, top%])
+  // Fixed 8-Seat HTML Edge mapping ([left%, top%])
   // Traces the exact perimeter of the CSS Table Base
   const SEAT_MAP: Record<number, { left: number; top: number }> = {
     0: { left: 50, top: 100 }, // Hero (Bottom Center)
-    1: { left: 15, top: 95 }, // Bottom Left
-    2: { left: 0, top: 70 }, // Left Bottom
-    3: { left: 0, top: 30 }, // Left Top
-    4: { left: 15, top: 5 }, // Top Left
-    5: { left: 50, top: 0 }, // Top Center
-    6: { left: 85, top: 5 }, // Top Right
-    7: { left: 100, top: 30 }, // Right Top
-    8: { left: 100, top: 70 }, // Right Bottom
-    9: { left: 85, top: 95 }, // Bottom Right
+    1: { left: 15, top: 85 },  // Bottom Left
+    2: { left: 0, top: 50 },   // Left Center
+    3: { left: 20, top: 10 },  // Top Left
+    4: { left: 50, top: 0 },   // Top Center
+    5: { left: 80, top: 10 },  // Top Right
+    6: { left: 100, top: 50 }, // Right Center
+    7: { left: 85, top: 85 },  // Bottom Right
   };
 
   const pos = SEAT_MAP[seatIndex] || { left: 50, top: 50 };
@@ -179,7 +177,7 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({
         <motion.div
           initial={{ opacity: 0, scale: 0.5, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="absolute z-40 group/bet pointer-events-none"
+          className="absolute z-40 group/bet pointer-events-none hidden sm:flex"
           style={{
             left: `calc(${left}% + ${unitX} * ${betOffsetPx})`,
             top: `calc(${top}% + ${unitY} * ${betOffsetPx})`,
@@ -187,12 +185,12 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({
           }}
         >
           <motion.div
-            animate={{ y: [0, -4, 0] }}
+            animate={{ y: [0, -3, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="relative flex items-center"
+            className="relative flex items-center max-sm:scale-95 origin-center"
           >
             {/* 3D Dynamic Vertical Chip Stack */}
-            <div className="relative w-5 h-8 mr-2 overflow-visible">
+            <div className="relative w-5 h-8 mr-2 overflow-visible max-sm:hidden">
               <AnimatePresence mode="popLayout">
                 {[
                   ...Array(
@@ -356,12 +354,22 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({
                     initial={{ opacity: 0, y: 10, scale: 0.8 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.5 }}
-                    className={`${player.lastAction.includes("Fold") ? "bg-red-500/90" : "bg-poker-gold/90"} text-slate-950 text-[8px] font-black px-2 py-0.5 rounded-sm shadow-xl border border-white/20 whitespace-nowrap uppercase tracking-wider`}
+                    className={`hidden sm:block ${player.lastAction.includes("Fold") ? "bg-red-500/90" : "bg-poker-gold/90"} text-slate-950 text-[8px] font-black px-2 py-0.5 rounded-sm shadow-xl border border-white/20 whitespace-nowrap uppercase tracking-wider`}
                   >
                     {player.lastAction}
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* Mobile Bet Badge (Replaces Action Badge Space) */}
+              {player.bet > 0 && (
+                <div className="sm:hidden glass-ui-gold px-3 py-1 rounded-full border-poker-gold/30 shadow-lg border flex items-baseline gap-0.5 backdrop-blur-md bg-slate-950/90 scale-90 -mb-1">
+                  <span className="text-poker-gold/60 text-[7px] font-black uppercase tracking-widest">$</span>
+                  <span className="text-[11px] font-black text-white tabular-nums tracking-tighter drop-shadow-sm">
+                    {player.bet.toLocaleString()}
+                  </span>
+                </div>
+              )}
 
               {player.isAllIn && (
                 <div className="bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full shadow-lg border border-white/10 whitespace-nowrap scale-90">

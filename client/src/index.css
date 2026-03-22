@@ -293,8 +293,8 @@
     --table-width: clamp(260px, 80vw, 1000px);
     --player-plate-width: 40px;
     --card-width: 24px;
-    --card-offset: 60px;
-    --bet-offset: 85px;
+    --card-offset: 50px;
+    --bet-offset: 36px;
   }
 
   .glass-ui {

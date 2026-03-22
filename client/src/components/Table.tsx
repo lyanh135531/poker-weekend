@@ -18,21 +18,18 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
     ? [...gameState.players.slice(heroIndex), ...gameState.players.slice(0, heroIndex)]
     : gameState.players;
 
-  // 2. Map players to fixed 10-slot "Seating Chart" (Skipping Slot 5 for Pot)
-  // Slots: 0 (Bottom), 1, 2, 3, 4 (Right), 5 (TOP - RESERVED), 6, 7, 8, 9 (Left)
-  const availableSeats = [0, 1, 2, 3, 4, 6, 7, 8, 9];
+  // 2. Map players to fixed 8-slot "Seating Chart"
+  const availableSeats = [0, 1, 2, 3, 4, 5, 6, 7];
 
   // Calculate relative seat index based on reordered index and total players
-  // This ensures even distribution across the 9 available slots
+  // This ensures even distribution across the 8 available slots
   const playersWithSeats = reorderedPlayers.map((player, idx) => {
     // For Hero (idx 0), we always want seat 0
     if (idx === 0) return { ...player, seatIndex: 0 };
 
-    // For others, distribute across the remaining 8 seats (1-4, 6-9)
-    // We map idx [1...N-1] to availableSeats [1...8]
-    // Simple even distribution formula
+    // For others, distribute across the remaining seats
     const seatMapIdx = Math.floor((idx / (reorderedPlayers.length || 1)) * availableSeats.length);
-    return { ...player, seatIndex: availableSeats[seatMapIdx] };
+    return { ...player, seatIndex: availableSeats[Math.min(seatMapIdx, availableSeats.length - 1)] };
   });
 
   return (
@@ -178,7 +175,7 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
           {/* Total Pot - Luxury Floating Badge (Moved outside overflow-hidden felt) */}
           <AnimatePresence>
             {gameState.stage !== 'WAITING' && (
-              <div className="absolute top-[18%] sm:top-[20%] max-sm:top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 transition-all duration-1000"
+              <div className="absolute top-[32%] sm:top-[30%] max-sm:top-[28%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 transition-all duration-1000"
                 style={gameState.stage === 'SHOWDOWN' && gameState.lastWinner ? {
                   top: (() => {
                     const winner = playersWithSeats.find(p => p.name === gameState.lastWinner?.name);
@@ -283,7 +280,7 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
               key={player.id}
               player={player}
               seatIndex={player.seatIndex}
-              totalSeats={10}
+              totalSeats={8}
               isMe={player.id === myId}
               isDealer={player.isDealer}
               stage={gameState.stage}
