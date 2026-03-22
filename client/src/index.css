@@ -183,7 +183,7 @@
   }
 
   .card-socket {
-    @apply w-10 h-14 md:w-14 md:h-20 rounded-md border border-white/5 bg-black/10;
+    @apply w-8 h-11 sm:w-10 sm:h-14 md:w-14 md:h-20 rounded-md border border-white/5 bg-black/10;
   }
 
   .animate-spin-slow {
@@ -293,7 +293,7 @@
     --table-width: clamp(260px, 80vw, 1000px);
     --player-plate-width: 40px;
     --card-width: 24px;
-    --card-offset: 44px;
+    --card-offset: 60px;
     --bet-offset: 85px;
   }
 
