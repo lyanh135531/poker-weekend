@@ -411,8 +411,8 @@ const Player: React.FC<PlayerProps & { turnExpiresAt?: number }> = ({
             </div>
             {/* Dealer Marker */}
             {isDealer && (
-              <div className="absolute top-[-2px] right-[-1px] bg-poker-gold text-slate-950 p-1 rounded-full shadow-lg z-50 ring-2 ring-slate-950 scale-75 md:scale-90 md:top-0 md:right-0">
-                <Crown className="w-2.5 h-2.5 md:w-3 md:h-3 fill-current" />
+              <div className="absolute top-[2px] right-[6px] bg-poker-gold text-slate-950 p-1 rounded-full shadow-lg z-50 ring-2 ring-slate-950 scale-75 md:scale-90 md:top-0 md:right-0">
+                <Crown className="w-1.5 h-1.5 md:w-3 md:h-3 fill-current" />
               </div>
             )}
           </div>

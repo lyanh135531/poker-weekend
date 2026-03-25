@@ -290,11 +290,11 @@
 /* Mobile-Specific Refinements (iPhone Safe-Area Standards) */
 @media (max-width: 640px) {
   :root {
-    --table-width: clamp(260px, 80vw, 1000px);
+    --table-width: clamp(260px, 86vw, 1000px);
     --player-plate-width: 40px;
-    --card-width: 24px;
-    --card-offset: 50px;
-    --bet-offset: 36px;
+    --card-width: 22px;
+    --card-offset: 46px;
+    --bet-offset: 28px;
   }
 
   .glass-ui {

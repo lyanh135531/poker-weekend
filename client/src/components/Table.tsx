@@ -42,10 +42,10 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
       >
 
         {/* Table Frame (3D Depth) */}
-        <div className="absolute -inset-4 bg-slate-900 rounded-[14rem] shadow-[0_40px_100px_rgba(0,0,0,0.8)] border-b-[8px] border-black/40"></div>
+        <div className="absolute inset-0 max-sm:inset-0 md:-inset-4 bg-slate-900 rounded-[14rem] shadow-[0_40px_100px_rgba(0,0,0,0.8)] border-b-[8px] border-black/40"></div>
 
         {/* Leather Rim Buffer */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-950 rounded-[13.5rem] p-3 shadow-inner flex items-center justify-center border border-white/5">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-950 rounded-[13.5rem] p-1.5 sm:p-3 shadow-inner flex items-center justify-center border border-white/5">
 
           {/* Main Felt Play Area (Geometric Center) */}
           <div className="relative w-full h-full bg-[#1a472a] rounded-[12.5rem] inner-shadow-table overflow-hidden border-2 border-black/20">
@@ -58,7 +58,7 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
             {/* Integrated Waiting / Showdown Control Zone */}
             <AnimatePresence>
               {(gameState.stage === 'WAITING' || gameState.stage === 'SHOWDOWN') && (
-                <div className={`absolute inset-0 flex items-center justify-center z-50 transition-all duration-700 ${gameState.stage === 'SHOWDOWN' ? '-translate-y-40' : ''}`}>
+                <div className={`absolute inset-0 flex items-center justify-center z-50 transition-all duration-700 ${gameState.stage === 'SHOWDOWN' ? '-translate-y-[28%] sm:-translate-y-40' : ''}`}>
                   <motion.div
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -94,9 +94,30 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
                             </p>
                           </div>
                         </div>
+
+                        {myId === gameState.creatorId && (
+                          <div className="mt-4 flex flex-col items-center">
+                            <button
+                              onClick={() => onAction('start_game')}
+                              disabled={gameState.players.length < 2}
+                              className="group relative flex items-center justify-center p-0.5 rounded-full overflow-hidden transition-all active:scale-95 disabled:opacity-20"
+                            >
+                              <div className="absolute inset-0 bg-gradient-to-tr from-poker-gold to-yellow-600 opacity-80 group-hover:opacity-100 transition-opacity" />
+                              <div className="relative bg-slate-950 px-5 py-2 rounded-full flex items-center gap-2 border border-white/5">
+                                <Play className="w-3 h-3 text-poker-gold fill-current" />
+                                <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.2em]">Start</span>
+                              </div>
+                            </button>
+                            {gameState.players.length < 2 && (
+                              <p className="text-[7px] text-poker-gold/30 uppercase tracking-[0.2em] font-black animate-pulse mt-2">
+                                Awaiting Competitor
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </>
                     ) : (
-                      <div className="flex flex-col items-center gap-1 mt-4">
+                      <div className="flex flex-col items-center gap-1 mt-14 sm:mt-4">
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -105,12 +126,12 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
                           <span className="text-poker-gold/40 text-[7px] uppercase tracking-[0.4em] font-black mb-1">
                             Victory
                           </span>
-                          <h2 className="text-white text-3xl md:text-4xl font-black tracking-tighter uppercase italic drop-shadow-2xl">
+                          <h2 className="text-white text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter uppercase italic drop-shadow-2xl">
                             {gameState.lastWinner?.name}
                           </h2>
                           <div className="flex items-center gap-2 mt-1">
                             <div className="h-px w-4 bg-poker-gold/20" />
-                            <span className="text-poker-gold text-[10px] uppercase tracking-[0.2em] font-bold">
+                            <span className="text-poker-gold text-[8px] sm:text-[10px] uppercase tracking-[0.2em] font-bold">
                               {gameState.lastWinner?.handName}
                             </span>
                             <div className="h-px w-4 bg-poker-gold/20" />
@@ -118,29 +139,30 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
                         </motion.div>
                       </div>
                     )}
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
 
-                    {myId === gameState.creatorId && (
-                      <div className="mt-6 flex flex-col items-center">
-                        <button
-                          onClick={() => onAction(gameState.stage === 'SHOWDOWN' ? 'reset_game' : 'start_game')}
-                          disabled={(gameState.players.length < 2 && gameState.stage === 'WAITING')}
-                          className="group relative flex items-center justify-center p-0.5 rounded-full overflow-hidden transition-all active:scale-95 disabled:opacity-20"
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-tr from-poker-gold to-yellow-600 opacity-80 group-hover:opacity-100 transition-opacity" />
-                          <div className="relative bg-slate-950 px-5 py-2 rounded-full flex items-center gap-2 border border-white/5">
-                            <Play className="w-3 h-3 text-poker-gold fill-current" />
-                            <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.2em]">
-                              {gameState.stage === 'SHOWDOWN' ? 'Next' : 'Start'}
-                            </span>
-                          </div>
-                        </button>
-                        {gameState.stage === 'WAITING' && gameState.players.length < 2 && (
-                          <p className="text-[7px] text-poker-gold/30 uppercase tracking-[0.2em] font-black animate-pulse">
-                            Awaiting Competitor
-                          </p>
-                        )}
+            {/* SHOWDOWN Next Button (BOTTOM) - Mobile Optimized Position */}
+            <AnimatePresence>
+              {gameState.stage === 'SHOWDOWN' && myId === gameState.creatorId && (
+                <div className="absolute inset-x-0 bottom-[18%] flex justify-center z-50">
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 20, opacity: 0 }}
+                  >
+                    <button
+                      onClick={() => onAction('reset_game')}
+                      className="group relative flex items-center justify-center p-0.5 rounded-full overflow-hidden transition-all active:scale-95"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-tr from-poker-gold to-yellow-600 opacity-80 group-hover:opacity-100 transition-opacity" />
+                      <div className="relative bg-slate-950 px-3.5 py-1.5 sm:px-6 sm:py-2.5 rounded-full flex items-center gap-2 border border-white/5 shadow-2xl">
+                        <Play className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-poker-gold fill-current" />
+                        <span className="text-[9px] sm:text-[11px] font-black text-white/90 uppercase tracking-[0.2em]">Next</span>
                       </div>
-                    )}
+                    </button>
                   </motion.div>
                 </div>
               )}
@@ -148,7 +170,7 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
 
 
             {/* Community Cards - Centered & Responsive Gap */}
-            <div className="absolute top-[50%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-1 md:gap-2">
+            <div className="absolute top-[50%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-0.5 sm:gap-1 md:gap-2">
               {[0, 1, 2, 3, 4].map(idx => (
                 <div key={idx} className="card-socket relative flex items-center justify-center">
                   <AnimatePresence mode="popLayout">
@@ -175,7 +197,7 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
           {/* Total Pot - Luxury Floating Badge (Moved outside overflow-hidden felt) */}
           <AnimatePresence>
             {gameState.stage !== 'WAITING' && (
-              <div className="absolute top-[32%] sm:top-[30%] max-sm:top-[28%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 transition-all duration-1000"
+              <div className="absolute top-[32%] sm:top-[30%] max-sm:top-[34%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 transition-all duration-1000"
                 style={gameState.stage === 'SHOWDOWN' && gameState.lastWinner ? {
                   top: (() => {
                     const winner = playersWithSeats.find(p => p.name === gameState.lastWinner?.name);
@@ -203,28 +225,28 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
               >
                 <motion.div
                   initial={{ scale: 0.9, opacity: 0, y: -20 }}
-                  animate={{ 
-                    scale: 1, 
-                    opacity: 1, 
+                  animate={{
+                    scale: 1,
+                    opacity: 1,
                     y: [0, -4, 0],
                   }}
                   exit={{ scale: 0.8, opacity: 0, y: -20 }}
-                  transition={{ 
+                  transition={{
                     y: {
                       repeat: Infinity,
                       duration: 3,
                       ease: "easeInOut"
                     },
-                    type: 'spring', 
-                    stiffness: 300, 
-                    damping: 25 
+                    type: 'spring',
+                    stiffness: 300,
+                    damping: 25
                   }}
                   className="flex flex-col items-center gap-1"
                 >
-                  <div className="glass-ui-luxury rounded-full px-4 py-1.5 sm:px-6 sm:py-2.5 flex items-center justify-center shadow-[0_15px_40px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.05)] border border-poker-gold/30 relative group overflow-hidden transition-all scale-[0.95] sm:scale-100">
+                  <div className="glass-ui-luxury rounded-full px-3 py-1 sm:px-6 sm:py-2.5 flex items-center justify-center shadow-[0_15px_40px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.05)] border border-poker-gold/30 relative group overflow-hidden transition-all scale-[0.9] sm:scale-100">
                     {/* Pulsing Gold Layer for WOW factor */}
                     <div className="absolute inset-0 bg-poker-gold/5 animate-pulse" />
-                    
+
                     {/* Gold Inner Glow */}
                     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-poker-gold/20 to-transparent opacity-40" />
 
@@ -246,7 +268,7 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
                               animate={{ scale: 1, opacity: 1 }}
                               exit={{ scale: 1.5, opacity: 0 }}
                               transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                              className="inline-block text-sm sm:text-lg md:text-xl font-black text-white tabular-nums tracking-tighter drop-shadow-md"
+                              className="inline-block text-xs sm:text-lg md:text-xl font-black text-white tabular-nums tracking-tighter drop-shadow-md"
                             >
                               {gameState.stage === 'SHOWDOWN' && gameState.lastWinner ? gameState.lastWinner.amount.toLocaleString() : gameState.pot.toLocaleString()}
                             </motion.span>
@@ -254,17 +276,17 @@ const Table: React.FC<TableProps> = ({ gameState, myId, onAction }) => {
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Sweep Highlight Effect */}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                   </div>
 
                   {/* Visual Anchor/Shadow on Felt */}
                   {gameState.stage !== 'SHOWDOWN' && (
-                    <motion.div 
+                    <motion.div
                       animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.4, 0.3] }}
                       transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-                      className="w-16 h-2 bg-black/60 blur-xl rounded-[100%] mt-1 mx-auto" 
+                      className="w-16 h-2 bg-black/60 blur-xl rounded-[100%] mt-1 mx-auto"
                     />
                   )}
                 </motion.div>
